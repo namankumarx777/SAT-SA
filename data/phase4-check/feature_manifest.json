@@ -1,0 +1,292 @@
+{
+  "dataset_id": "synthetic",
+  "source_dataset": "..\\data\\synthetic",
+  "schema_version": "1.0",
+  "generated_at": "2026-09-13T07:57:23.268769+00:00",
+  "row_counts": {
+    "alert_features": 10000,
+    "case_features": 2151,
+    "asset_features": 733,
+    "entity_features": 12,
+    "entity_month_features": 72
+  },
+  "feature_counts": {
+    "alert_features": 20,
+    "case_features": 17,
+    "asset_features": 13,
+    "entity_features": 45,
+    "entity_month_features": 11
+  },
+  "features": [
+    {
+      "name": "acknowledgement_minutes",
+      "type": "float",
+      "source": [
+        "alerts"
+      ],
+      "formula": "acknowledged_at - timestamp",
+      "nullable": true,
+      "description": "Minutes from alert creation to acknowledgement."
+    },
+    {
+      "name": "alert_lifetime_minutes",
+      "type": "float",
+      "source": [
+        "alerts"
+      ],
+      "formula": "closed_at - timestamp",
+      "nullable": true,
+      "description": "Minutes from alert creation to closure."
+    },
+    {
+      "name": "has_case",
+      "type": "bool",
+      "source": [
+        "alerts"
+      ],
+      "formula": "case_id is not null",
+      "nullable": false,
+      "description": "Whether the alert has a related case."
+    },
+    {
+      "name": "is_closed",
+      "type": "bool",
+      "source": [
+        "alerts"
+      ],
+      "formula": "status == Closed or closed_at is not null",
+      "nullable": false,
+      "description": "Whether the alert is closed."
+    },
+    {
+      "name": "severity_rank",
+      "type": "int",
+      "source": [
+        "alerts"
+      ],
+      "formula": "Low=1, Medium=2, High=3, Critical=4",
+      "nullable": false,
+      "description": "Ordinal severity representation."
+    },
+    {
+      "name": "is_high_or_critical",
+      "type": "bool",
+      "source": [
+        "alerts"
+      ],
+      "formula": "severity in High, Critical",
+      "nullable": false,
+      "description": "Whether severity is high or critical."
+    },
+    {
+      "name": "is_critical",
+      "type": "bool",
+      "source": [
+        "alerts"
+      ],
+      "formula": "severity == Critical",
+      "nullable": false,
+      "description": "Whether severity is critical."
+    },
+    {
+      "name": "investigation_minutes",
+      "type": "float",
+      "source": [
+        "cases"
+      ],
+      "formula": "closed_at - opened_at",
+      "nullable": true,
+      "description": "Minutes from case opening to closure."
+    },
+    {
+      "name": "escalation_delay_minutes",
+      "type": "float",
+      "source": [
+        "cases",
+        "escalations"
+      ],
+      "formula": "escalation.created_at - case.opened_at",
+      "nullable": true,
+      "description": "Minutes from case opening to escalation."
+    },
+    {
+      "name": "investigation_text_length",
+      "type": "int",
+      "source": [
+        "cases"
+      ],
+      "formula": "character length of investigation_text",
+      "nullable": false,
+      "description": "Investigation text character count."
+    },
+    {
+      "name": "investigation_word_count",
+      "type": "int",
+      "source": [
+        "cases"
+      ],
+      "formula": "whitespace-token count",
+      "nullable": false,
+      "description": "Approximate investigation text word count."
+    },
+    {
+      "name": "asset_alert_count",
+      "type": "int",
+      "source": [
+        "alerts"
+      ],
+      "formula": "alerts grouped by asset_id",
+      "nullable": false,
+      "description": "Total alerts associated with the asset."
+    },
+    {
+      "name": "asset_recent_alert_count",
+      "type": "int",
+      "source": [
+        "alerts"
+      ],
+      "formula": "same-asset alerts in preceding 30 days",
+      "nullable": false,
+      "description": "Same-asset alert activity in a fixed recent window."
+    },
+    {
+      "name": "monitoring_coverage_rate",
+      "type": "float",
+      "source": [
+        "assets",
+        "alerts"
+      ],
+      "formula": "expected monitored assets with activity / expected monitored assets",
+      "nullable": true,
+      "description": "Observed activity coverage among expected monitored assets."
+    },
+    {
+      "name": "rapid_closure_rate",
+      "type": "float",
+      "source": [
+        "cases"
+      ],
+      "formula": "closed investigations <= 10 minutes / cases",
+      "nullable": true,
+      "description": "Share of cases closed within the configured feature threshold."
+    }
+  ],
+  "table_columns": {
+    "alert_features": [
+      "id",
+      "entity_id",
+      "asset_id",
+      "timestamp",
+      "severity",
+      "source",
+      "acknowledged_at",
+      "closed_at",
+      "status",
+      "case_id",
+      "asset_alert_count",
+      "asset_distinct_alert_sources",
+      "asset_recent_alert_count",
+      "acknowledgement_minutes",
+      "alert_lifetime_minutes",
+      "has_case",
+      "is_closed",
+      "severity_rank",
+      "is_high_or_critical",
+      "is_critical"
+    ],
+    "case_features": [
+      "id",
+      "entity_id",
+      "alert_id",
+      "opened_at",
+      "closed_at",
+      "investigation_text",
+      "disposition",
+      "escalated",
+      "remediation_recorded",
+      "investigation_minutes",
+      "is_closed",
+      "escalation_delay_minutes",
+      "is_escalated",
+      "is_remediated",
+      "investigation_text_length",
+      "investigation_word_count",
+      "severity"
+    ],
+    "asset_features": [
+      "id",
+      "entity_id",
+      "asset_type",
+      "criticality",
+      "expected_monitoring",
+      "monitoring_source",
+      "alert_count",
+      "case_count",
+      "last_alert_at",
+      "has_alert_activity",
+      "has_case_activity",
+      "expected_monitoring_no_activity",
+      "asset_alert_rate_relative_to_entity"
+    ],
+    "entity_features": [
+      "entity_id",
+      "name",
+      "sector",
+      "size",
+      "criticality",
+      "created_at",
+      "alert_count",
+      "alerts_with_cases",
+      "open_alert_count",
+      "closed_alert_count",
+      "low_alert_count",
+      "medium_alert_count",
+      "high_alert_count",
+      "critical_alert_count",
+      "critical_alert_rate",
+      "high_critical_alert_rate",
+      "repeat_asset_alert_count",
+      "case_count",
+      "escalated_case_count",
+      "non_escalated_case_count",
+      "critical_escalated_case_count",
+      "critical_case_count",
+      "remediated_case_count",
+      "non_remediated_case_count",
+      "mean_investigation_minutes",
+      "median_investigation_minutes",
+      "rapid_closure_count",
+      "total_assets",
+      "expected_monitored_assets",
+      "expected_monitored_assets_with_activity",
+      "expected_monitored_assets_without_activity",
+      "assets_with_alert_activity",
+      "critical_assets",
+      "critical_assets_with_activity",
+      "repeat_asset_count",
+      "case_rate",
+      "escalation_rate",
+      "critical_escalation_rate",
+      "remediation_rate",
+      "rapid_closure_rate",
+      "repeat_asset_alert_rate",
+      "cases_per_asset",
+      "alerts_per_asset",
+      "monitoring_coverage_rate",
+      "critical_asset_activity_rate"
+    ],
+    "entity_month_features": [
+      "entity_id",
+      "year",
+      "month",
+      "alert_count",
+      "critical_alert_count",
+      "case_count",
+      "escalated_case_count",
+      "investigated_case_count",
+      "remediated_case_count",
+      "mean_investigation_minutes",
+      "median_investigation_minutes"
+    ]
+  }
+}
