@@ -28,14 +28,16 @@ The implemented analytical progression is:
 4. **Phase 5**: Evaluate isolated deterministic supervisory rules.
 5. **Phase 6**: Detect potential execution gaps against configured expectations.
 6. **Phase 7**: Detect unexpected absence of expected operational evidence.
+7. **Phase 8**: Evaluate peer cohort benchmarking and contextual anomaly detection.
+8. **Phase 9**: Evaluate multi-dimensional supervisory risk and manual-review prioritisation.
+9. **Phase 10**: Provide an offline supervisor-facing dashboard and SIH demo workflow.
 
-Later phases are intentionally outside the current boundary:
+Non-goals and out-of-scope capabilities:
 
-- peer benchmarking
-- statistical or machine-learning anomaly detection
-- risk scoring
-- review prioritisation
-- dashboard workflows
+- autonomous regulatory enforcement decisions
+- SOC analyst replacement or automated alert triage
+- live SIEM telemetry feeds or packet analyzers
+- probabilistic risk modeling (scores are operational indicators, not probabilities)
 
 ## Interpretation Rules
 

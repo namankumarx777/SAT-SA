@@ -1,0 +1,105 @@
+"use client";
+
+import React from "react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+} from "recharts";
+
+interface DimensionScoreItem {
+  dimension: string;
+  score: number | null;
+  weight: number;
+}
+
+export function RiskDimensionBarChart({
+  data,
+}: {
+  data: DimensionScoreItem[];
+}) {
+  const chartData = data.map((d) => ({
+    dimension: d.dimension,
+    score: d.score !== null ? d.score : 0,
+    isAssessable: d.score !== null,
+    weight: `${(d.weight * 100).toFixed(0)}%`,
+  }));
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const item = payload[0].payload;
+      return (
+        <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-md text-xs space-y-1 font-mono">
+          <p className="font-semibold text-[var(--fg)]">{item.dimension}</p>
+          <p className="text-[var(--muted)]">
+            Score:{" "}
+            {item.isAssessable ? (
+              <span className="font-bold text-[var(--fg)]">
+                {item.score.toFixed(1)} / 100
+              </span>
+            ) : (
+              <span className="italic">Not Assessable</span>
+            )}
+          </p>
+          <p className="text-[var(--subtle)] text-[10px]">Weight: {item.weight}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="w-full h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 8, right: 24, left: 32, bottom: 8 }}
+        >
+          <XAxis
+            type="number"
+            domain={[0, 100]}
+            stroke="var(--muted)"
+            fontSize={10}
+            tickLine={false}
+            axisLine={{ stroke: "var(--border)" }}
+            tickFormatter={(v) => `${v}`}
+          />
+          <YAxis
+            type="category"
+            dataKey="dimension"
+            stroke="var(--muted)"
+            fontSize={11}
+            tickLine={false}
+            axisLine={false}
+            width={120}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--surface-secondary)", opacity: 0.5 }} />
+          <Bar dataKey="score" radius={[0, 4, 4, 0]} maxBarSize={16}>
+            {chartData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={
+                  !entry.isAssessable
+                    ? "var(--border)"
+                    : entry.score >= 75
+                    ? "var(--risk-critical-dot)"
+                    : entry.score >= 50
+                    ? "var(--risk-high-dot)"
+                    : entry.score >= 25
+                    ? "var(--risk-moderate-dot)"
+                    : "var(--fg)"
+                }
+                opacity={entry.isAssessable ? 0.9 : 0.4}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
