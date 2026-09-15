@@ -43,7 +43,7 @@ export default function DataQualityPage() {
   }, []);
 
   if (loading) {
-    return <LoadingSkeleton text="Loading assessment documentation..." />;
+    return <LoadingSkeleton variant="data-quality" text="Loading assessment documentation..." />;
   }
 
   if (error) {

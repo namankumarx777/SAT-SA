@@ -6,12 +6,13 @@ from pathlib import Path
 
 import polars as pl
 
+from app.analytics.detectors.bundle import load_feature_bundle
+from app.analytics.detectors.models import Evidence, Finding
+from app.analytics.detectors.output import canonical_frame, order_evidence, order_findings
 from app.analytics.execution_gap.definitions import DETECTORS, enabled_detectors
 from app.analytics.execution_gap.evaluators import EVALUATORS
 from app.analytics.execution_gap.manifest import write_manifest
 from app.analytics.execution_gap.models import ExecutionGapRunResult
-from app.analytics.rules.engine import load_feature_bundle
-from app.analytics.rules.models import Evidence, Finding
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[4] / "data" / "processed" / "execution_gap"
 
@@ -31,29 +32,16 @@ def evaluate_all(feature_bundle: dict[str, pl.DataFrame]) -> ExecutionGapRunResu
         evaluated.append(detector.detector_id)
         findings.extend(detector_findings)
         evidence.extend(detector_evidence)
-    findings_by_id = {item.id: item for item in findings}
-    evidence_by_id = {item.id: item for item in evidence if item.finding_id in findings_by_id}
-    ordered_findings = sorted(findings_by_id.values(), key=lambda item: (item.rule_id, item.entity_id, item.id))
-    ordered_evidence = sorted(evidence_by_id.values(), key=lambda item: (item.finding_id, item.source_type, item.source_id, item.field, item.id))
+    ordered_findings = order_findings(findings)
+    ordered_evidence = order_evidence(evidence, (item.id for item in ordered_findings))
     return ExecutionGapRunResult(findings=ordered_findings, evidence=ordered_evidence, detectors_evaluated=evaluated, deferred_detectors=deferred)
-
-
-def _frame(items: list[Finding] | list[Evidence]) -> pl.DataFrame:
-    if not items:
-        return pl.DataFrame()
-    rows = [item.model_dump() for item in items]
-    for row in rows:
-        for key, value in row.items():
-            if value is not None and not isinstance(value, (str, int, float, bool)):
-                row[key] = str(value)
-    return pl.DataFrame(rows)
 
 
 def write_outputs(result: ExecutionGapRunResult, output_dir: str | Path, dataset_id: str) -> None:
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
-    _frame(result.findings).write_parquet(destination / "findings.parquet")
-    _frame(result.evidence).write_parquet(destination / "evidence.parquet")
+    canonical_frame(result.findings).write_parquet(destination / "findings.parquet")
+    canonical_frame(result.evidence).write_parquet(destination / "evidence.parquet")
     write_manifest(destination, dataset_id, result)
 
 

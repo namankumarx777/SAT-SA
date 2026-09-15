@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.analytics.detectors.models import Evidence, Finding
+
 
 class NegativeSpaceDefinition(BaseModel):
     detector_id: str
@@ -27,8 +29,8 @@ class ObservationWindow(BaseModel):
 
 
 class NegativeSpaceRunResult(BaseModel):
-    findings: list
-    evidence: list
+    findings: list[Finding]
+    evidence: list[Evidence]
     detectors_evaluated: list[str]
     deferred_detectors: dict[str, str] = Field(default_factory=dict)
     observation_window: ObservationWindow

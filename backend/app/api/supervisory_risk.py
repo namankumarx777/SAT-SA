@@ -113,11 +113,17 @@ def get_contributions(entity_id: str, output_path: str | None = None) -> list[di
 @router.get("/manifest")
 def get_manifest(output_path: str | None = None) -> dict[str, Any]:
     import json
+    from app.analytics.supervisory_risk.config import DIMENSION_METADATA
     path = _get_output_path(output_path) / "supervisory_risk_manifest.json"
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Supervisory risk manifest not found")
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        manifest = json.load(f)
+    # Backward compatibility: older committed manifests predate dimensions_config.
+    # The canonical dimension configuration always lives in config, so merge it here.
+    if "dimensions_config" not in manifest:
+        manifest["dimensions_config"] = DIMENSION_METADATA
+    return manifest
 
 
 @router.get("/findings/{finding_id}")

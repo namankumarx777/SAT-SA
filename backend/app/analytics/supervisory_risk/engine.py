@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import argparse
-import json
 from collections import Counter
 from pathlib import Path
-from typing import Any
 
-import polars as pl
-
+from app.analytics.detectors.output import canonical_frame
 from app.analytics.supervisory_risk.aggregation import aggregate_entity_risk
 from app.analytics.supervisory_risk.config import DEFERRED_DETECTORS, DIMENSION_WEIGHTS
 from app.analytics.supervisory_risk.correlation import (
@@ -35,18 +32,6 @@ from app.analytics.supervisory_risk.normalization import (
 from app.analytics.supervisory_risk.priority import build_review_queue
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[4] / "data" / "processed" / "supervisory_risk"
-
-
-def _frame(items: list[Any]) -> pl.DataFrame:
-    """Safely convert Pydantic models to Polars DataFrame with deterministic column formats."""
-    if not items:
-        return pl.DataFrame()
-    rows = [item.model_dump() for item in items]
-    for row in rows:
-        for key, value in row.items():
-            if value is not None and not isinstance(value, (str, int, float, bool)):
-                row[key] = json.dumps(value, sort_keys=True) if isinstance(value, (list, dict)) else str(value)
-    return pl.DataFrame(rows)
 
 
 def evaluate_supervisory_risk(bundle: UpstreamBundle) -> SupervisoryRiskRunResult:
@@ -126,9 +111,9 @@ def write_outputs(
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
 
-    _frame(result.entity_risks).write_parquet(destination / "entity_risk.parquet")
-    _frame(result.risk_contributions).write_parquet(destination / "risk_contributions.parquet")
-    _frame(result.review_queue).write_parquet(destination / "review_queue.parquet")
+    canonical_frame(result.entity_risks).write_parquet(destination / "entity_risk.parquet")
+    canonical_frame(result.risk_contributions).write_parquet(destination / "risk_contributions.parquet")
+    canonical_frame(result.review_queue).write_parquet(destination / "review_queue.parquet")
 
     write_manifest(destination, dataset_id, bundle, result)
 

@@ -8,6 +8,9 @@ from pathlib import Path
 
 import polars as pl
 
+from app.analytics.detectors.bundle import load_feature_bundle
+from app.analytics.detectors.models import Evidence, Finding
+from app.analytics.detectors.output import canonical_frame, order_evidence, order_findings
 from app.analytics.peer_anomaly.anomaly import ANOMALY_FEATURES, detect_anomalies, prepare_anomaly_matrix
 from app.analytics.peer_anomaly.benchmarks import METRICS, peer_statistics
 from app.analytics.peer_anomaly.cohorts import COHORT_COLUMNS, MIN_COHORT_SIZE, attach_cohort_keys, build_cohorts
@@ -15,8 +18,6 @@ from app.analytics.peer_anomaly.definitions import DETECTORS, MIN_ASSETS, MIN_CL
 from app.analytics.peer_anomaly.evidence import add_feature_evidence, anomaly_finding, peer_finding
 from app.analytics.peer_anomaly.models import PeerAnomalyRunResult
 from app.analytics.peer_anomaly.statistics import deviation, material_peer_deviation
-from app.analytics.rules.engine import load_feature_bundle
-from app.analytics.rules.models import Evidence, Finding
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[4] / "data" / "processed" / "peer_anomaly"
 
@@ -104,27 +105,15 @@ def evaluate_anomalies(entity_features: pl.DataFrame) -> tuple[list[Finding], li
 def evaluate_all(bundle: dict[str, pl.DataFrame]) -> PeerAnomalyRunResult:
     peer_findings, peer_evidence, benchmarked = evaluate_peer_findings(bundle["entity_features"])
     anomaly_findings, anomaly_evidence, features = evaluate_anomalies(bundle["entity_features"])
-    findings = sorted(peer_findings + anomaly_findings, key=lambda item: (item.rule_id, item.entity_id, item.id))
-    evidence_map = {item.id: item for item in peer_evidence + anomaly_evidence}
-    evidence = sorted(evidence_map.values(), key=lambda item: (item.finding_id, item.source_type, item.source_id, item.field, item.id))
+    findings = order_findings(peer_findings + anomaly_findings)
+    evidence = order_evidence(peer_evidence + anomaly_evidence)
     return PeerAnomalyRunResult(findings=findings, evidence=evidence, cohort_count=len(build_cohorts(bundle["entity_features"])), entities_benchmarked=benchmarked, anomalies=len(anomaly_findings))
-
-
-def _frame(items: list) -> pl.DataFrame:
-    if not items:
-        return pl.DataFrame()
-    rows = [item.model_dump() for item in items]
-    for row in rows:
-        for key, value in row.items():
-            if value is not None and not isinstance(value, (str, int, float, bool)):
-                row[key] = json.dumps(value, sort_keys=True) if isinstance(value, (list, dict)) else str(value)
-    return pl.DataFrame(rows)
 
 
 def write_outputs(result: PeerAnomalyRunResult, output_dir: str | Path, dataset_id: str, feature_list: list[str]) -> None:
     destination = Path(output_dir); destination.mkdir(parents=True, exist_ok=True)
-    _frame(result.findings).write_parquet(destination / "findings.parquet")
-    _frame(result.evidence).write_parquet(destination / "evidence.parquet")
+    canonical_frame(result.findings).write_parquet(destination / "findings.parquet")
+    canonical_frame(result.evidence).write_parquet(destination / "evidence.parquet")
     manifest = {
         "schema_version": "1.0", "dataset_id": dataset_id, "generated_at": datetime.now(timezone.utc).isoformat(),
         "peer_detectors": [key for key in DETECTORS if key.startswith("PB")], "anomaly_detectors": ["AN001"],

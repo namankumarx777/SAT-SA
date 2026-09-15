@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from app.analytics.rules.evidence import make_evidence, make_finding
-from app.analytics.rules.models import Evidence, Finding
+from app.analytics.detectors.evidence import make_evidence, make_finding
+from app.analytics.detectors.models import Evidence, Finding
 from app.analytics.negative_space.definitions import MAX_EVIDENCE_PER_FINDING
 
 

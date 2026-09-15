@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from app.analytics.detectors.models import Evidence, Finding
+
 
 class Cohort(BaseModel):
     key: str
@@ -23,8 +25,8 @@ class PeerStatistic(BaseModel):
 
 
 class PeerAnomalyRunResult(BaseModel):
-    findings: list
-    evidence: list
+    findings: list[Finding]
+    evidence: list[Evidence]
     cohort_count: int
     entities_benchmarked: int
     anomalies: int

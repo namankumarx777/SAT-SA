@@ -131,6 +131,12 @@ export interface ManifestData {
   input_phase_counts: Record<string, number>;
   dimensions: string[];
   dimension_weights: Record<string, number>;
+  dimensions_config?: Array<{
+    key: string;
+    field: string;
+    weight: number;
+    description: string;
+  }>;
   risk_band_thresholds: Record<string, [number, number]>;
   priority_thresholds: Record<string, number>;
   correlation_groups: Record<
@@ -161,4 +167,95 @@ export interface ManifestData {
     risk_contributions: number;
     review_queue: number;
   };
+}
+
+export interface DimensionConfig {
+  key: string;
+  field: string;
+  weight: number;
+  description: string;
+}
+
+export interface RiskBandThresholds {
+  moderate: number;
+  high: number;
+  critical: number;
+}
+
+export const FALLBACK_DIMENSION_CONFIG: DimensionConfig[] = [
+  {
+    key: "Escalation",
+    field: "escalation_score",
+    weight: 0.25,
+    description: "Unescalated critical security cases & escalation execution gaps",
+  },
+  {
+    key: "Investigation",
+    field: "investigation_score",
+    weight: 0.2,
+    description: "Investigation duration, rapid closure prevalence, & uninvestigated alerts",
+  },
+  {
+    key: "Remediation",
+    field: "remediation_score",
+    weight: 0.2,
+    description: "Asset vulnerability remediation execution & multi-phase gaps",
+  },
+  {
+    key: "Monitoring",
+    field: "monitoring_score",
+    weight: 0.15,
+    description: "Critical asset monitoring coverage & negative-space blindspots",
+  },
+  {
+    key: "Operational Discipline",
+    field: "operational_discipline_score",
+    weight: 0.1,
+    description: "Alert triage activity stability & baseline operational discipline",
+  },
+  {
+    key: "Cyber Resilience",
+    field: "cyber_resilience_score",
+    weight: 0.1,
+    description: "Contextual multivariate anomaly profile (AN001, capped influence)",
+  },
+];
+
+export const FALLBACK_RISK_BAND_THRESHOLDS: RiskBandThresholds = {
+  moderate: 25,
+  high: 50,
+  critical: 75,
+};
+
+export function dimensionConfigFromManifest(
+  manifest?: ManifestData | null,
+): DimensionConfig[] {
+  const configured = manifest?.dimensions_config;
+  if (configured && configured.length === 6) return configured;
+  return FALLBACK_DIMENSION_CONFIG;
+}
+
+export function riskBandThresholdsFromManifest(
+  manifest?: ManifestData | null,
+): RiskBandThresholds {
+  const raw = manifest?.risk_band_thresholds;
+  if (!raw) return FALLBACK_RISK_BAND_THRESHOLDS;
+  const moderate = Number(raw.MODERATE?.[0]);
+  const high = Number(raw.HIGH?.[0]);
+  const critical = Number(raw.CRITICAL?.[0]);
+  if ([moderate, high, critical].some(Number.isNaN)) return FALLBACK_RISK_BAND_THRESHOLDS;
+  return { moderate, high, critical };
+}
+
+export function bandRangeLabel(band: RiskBand, t: RiskBandThresholds): string {
+  switch (band) {
+    case "CRITICAL":
+      return `Score \u2265 ${t.critical.toFixed(1)}`;
+    case "HIGH":
+      return `Score ${t.high.toFixed(1)}\u2013${(t.critical - 0.1).toFixed(1)}`;
+    case "MODERATE":
+      return `Score ${t.moderate.toFixed(1)}\u2013${(t.high - 0.1).toFixed(1)}`;
+    case "LOW":
+      return `Score ${"0.0"}\u2013${(t.moderate - 0.1).toFixed(1)}`;
+  }
 }

@@ -10,6 +10,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
+import { FALLBACK_RISK_BAND_THRESHOLDS, RiskBandThresholds } from "../types";
 
 interface DimensionScoreItem {
   dimension: string;
@@ -19,8 +20,10 @@ interface DimensionScoreItem {
 
 export function RiskDimensionBarChart({
   data,
+  thresholds = FALLBACK_RISK_BAND_THRESHOLDS,
 }: {
   data: DimensionScoreItem[];
+  thresholds?: RiskBandThresholds;
 }) {
   const chartData = data.map((d) => ({
     dimension: d.dimension,
@@ -86,11 +89,11 @@ export function RiskDimensionBarChart({
                 fill={
                   !entry.isAssessable
                     ? "var(--border)"
-                    : entry.score >= 75
+                    : entry.score >= thresholds.critical
                     ? "var(--risk-critical-dot)"
-                    : entry.score >= 50
+                    : entry.score >= thresholds.high
                     ? "var(--risk-high-dot)"
-                    : entry.score >= 25
+                    : entry.score >= thresholds.moderate
                     ? "var(--risk-moderate-dot)"
                     : "var(--fg)"
                 }

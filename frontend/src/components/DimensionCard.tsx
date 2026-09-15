@@ -1,10 +1,12 @@
 import React from "react";
+import { FALLBACK_RISK_BAND_THRESHOLDS, RiskBandThresholds } from "../types";
 
 interface DimensionCardProps {
   dimension: string;
   score: number | null;
   weight: number;
   description?: string;
+  thresholds?: RiskBandThresholds;
 }
 
 export function DimensionCard({
@@ -12,6 +14,7 @@ export function DimensionCard({
   score,
   weight,
   description,
+  thresholds = FALLBACK_RISK_BAND_THRESHOLDS,
 }: DimensionCardProps) {
   const isAssessable = score !== null;
 
@@ -48,11 +51,11 @@ export function DimensionCard({
         {isAssessable ? (
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              score >= 75
+              score >= thresholds.critical
                 ? "bg-[var(--risk-critical-dot)]"
-                : score >= 50
+                : score >= thresholds.high
                 ? "bg-[var(--risk-high-dot)]"
-                : score >= 25
+                : score >= thresholds.moderate
                 ? "bg-[var(--risk-moderate-dot)]"
                 : "bg-[var(--fg)]"
             }`}

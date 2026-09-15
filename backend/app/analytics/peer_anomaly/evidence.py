@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.analytics.rules.evidence import make_evidence, make_finding
-from app.analytics.rules.models import Evidence, Finding
+from app.analytics.detectors.evidence import make_evidence, make_finding
+from app.analytics.detectors.models import Evidence, Finding
 
 
 def peer_finding(*, detector_id: str, entity_id: str, metric: str, observed: float, median: float, deviation: float, peer_count: int, cohort_key: str, strength: str, title: str, rationale: str) -> Finding:

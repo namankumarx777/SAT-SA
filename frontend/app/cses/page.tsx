@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { api } from "../../src/api";
 import { EntityRisk } from "../../src/types";
-import { RiskBandBadge } from "../../src/components/Badges";
 import { LoadingSkeleton, ErrorState, EmptyState } from "../../src/components/States";
 import { Select } from "../../src/components/Select";
 
@@ -20,6 +18,32 @@ type SortField =
   | "remediation_score"
   | "monitoring_score"
   | "assessment_coverage";
+
+// Apple-style minimal status indicator (dot + text label, no heavy pill container)
+function AppleStatusIndicator({ band }: { band: string }) {
+  const upper = (band || "LOW").toUpperCase();
+
+  let dotColor = "bg-[var(--risk-low-dot)]";
+  let label = "Low";
+
+  if (upper === "CRITICAL") {
+    dotColor = "bg-[var(--risk-critical-dot)]";
+    label = "Critical";
+  } else if (upper === "HIGH") {
+    dotColor = "bg-[var(--risk-high-dot)]";
+    label = "High";
+  } else if (upper === "MODERATE" || upper === "MEDIUM") {
+    dotColor = "bg-[var(--risk-moderate-dot)]";
+    label = "Moderate";
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--fg)] select-none">
+      <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
+      <span>{label}</span>
+    </span>
+  );
+}
 
 export default function CSEListPage() {
   const router = useRouter();
@@ -108,23 +132,63 @@ export default function CSEListPage() {
     }
   };
 
+  const renderSortIndicator = (field: SortField) => {
+    if (sortField !== field) {
+      return (
+        <ArrowUpDown className="w-3 h-3 text-[var(--muted)] opacity-0 group-hover:opacity-50 transition-opacity shrink-0" />
+      );
+    }
+    return sortAsc ? (
+      <ChevronUp className="w-3.5 h-3.5 text-[var(--fg)] shrink-0" />
+    ) : (
+      <ChevronDown className="w-3.5 h-3.5 text-[var(--fg)] shrink-0" />
+    );
+  };
+
   const renderDimensionCell = (score: number | null) => {
     if (score === null) {
       return (
-        <span className="text-[var(--subtle)] font-mono text-[11px] italic">
+        <span className="text-[var(--subtle)] font-mono text-[13px] block text-center">
           —
         </span>
       );
     }
     return (
-      <span className="font-mono text-xs tabular-nums text-[var(--fg)]">
+      <span className="font-mono text-[13.5px] tabular-nums text-[var(--fg)] block text-center">
         {score.toFixed(1)}
       </span>
     );
   };
 
+  const highBandCount = useMemo(
+    () =>
+      entities.filter(
+        (e) =>
+          (e.risk_band || "").toUpperCase() === "HIGH" ||
+          (e.risk_band || "").toUpperCase() === "CRITICAL",
+      ).length,
+    [entities],
+  );
+
+  const moderateBandCount = useMemo(
+    () =>
+      entities.filter(
+        (e) =>
+          (e.risk_band || "").toUpperCase() === "MODERATE" ||
+          (e.risk_band || "").toUpperCase() === "MEDIUM",
+      ).length,
+    [entities],
+  );
+
+  const lowBandCount = useMemo(
+    () =>
+      entities.filter((e) => (e.risk_band || "").toUpperCase() === "LOW")
+        .length,
+    [entities],
+  );
+
   if (loading) {
-    return <LoadingSkeleton text="Loading CSE registry..." />;
+    return <LoadingSkeleton variant="table" text="Loading CSE registry..." />;
   }
 
   if (error) {
@@ -132,76 +196,95 @@ export default function CSEListPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Sticky Header and Controls Container */}
-      <div className="sticky top-0 z-20 bg-[var(--bg)] -mt-4 sm:-mt-6 lg:-mt-8 pt-4 sm:pt-6 lg:pt-8 pb-3 space-y-3.5 border-b border-[var(--border)]">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--fg)]">
-              CSE Assessments
-            </h1>
-            <p className="text-xs text-[var(--muted)] mt-0.5">
-              Standardized evaluation registry across all 12 monitored entities
-            </p>
-          </div>
+    <div className="space-y-6 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--fg)]">
+            CSE Assessments
+          </h1>
+          <p className="text-xs sm:text-sm text-[var(--muted)] mt-0.5">
+            Standardized evaluation registry across all 12 monitored entities
+          </p>
         </div>
 
-        {/* Filter and Search Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Search className="w-3 h-3 absolute left-2.5 top-2.5 text-[var(--muted)]" />
-              <input
-                type="text"
-                placeholder="Search by ID, name, sector..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-52 sm:w-64"
-              />
-            </div>
-
-            <Select
-              value={selectedBand}
-              onChange={(val) => setSelectedBand(val)}
-              options={[
-                { value: "ALL", label: "All Bands" },
-                { value: "HIGH", label: "High" },
-                { value: "MODERATE", label: "Moderate" },
-                { value: "LOW", label: "Low" },
-              ]}
-            />
-
-            {uniqueSectors.length > 0 && (
-              <Select
-                value={selectedSector}
-                onChange={(val) => setSelectedSector(val)}
-                options={[
-                  { value: "ALL", label: "All Sectors" },
-                  ...uniqueSectors.map((s) => ({ value: s, label: s })),
-                ]}
-              />
-            )}
-
-            <Select
-              value={selectedCriticality}
-              onChange={(val) => setSelectedCriticality(val)}
-              options={[
-                { value: "ALL", label: "All Criticality" },
-                { value: "CRITICAL", label: "Critical" },
-                { value: "HIGH", label: "High" },
-                { value: "MEDIUM", label: "Medium" },
-              ]}
-            />
-          </div>
-
-          <span className="text-xs font-mono text-[var(--muted)]">
-            {filteredAndSortedEntities.length} of {entities.length} entities
+        <div className="flex items-center gap-2 font-mono text-xs select-none">
+          <span className="text-[var(--risk-high-text)] font-semibold">
+            {highBandCount} High
+          </span>
+          <span className="text-[var(--subtle)]">•</span>
+          <span className="text-[var(--risk-moderate-text)] font-semibold">
+            {moderateBandCount} Moderate
+          </span>
+          <span className="text-[var(--subtle)]">•</span>
+          <span className="text-[var(--risk-low-text)] font-semibold">
+            {lowBandCount} Low
           </span>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Floating Filter / Search Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Integrated Search */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[var(--muted)]" />
+            <input
+              type="text"
+              placeholder="Search by ID, name, sector..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-7 pr-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64"
+            />
+          </div>
+
+          {/* Segmented Band Filters */}
+          <div className="flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
+            {["ALL", "HIGH", "MODERATE", "LOW"].map((band) => (
+              <button
+                key={band}
+                onClick={() => setSelectedBand(band)}
+                className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
+                  selectedBand === band
+                    ? "bg-[var(--surface)] text-[var(--fg)] shadow-xs"
+                    : "text-[var(--muted)] hover:text-[var(--fg)]"
+                }`}
+              >
+                {band}
+              </button>
+            ))}
+          </div>
+
+          {uniqueSectors.length > 0 && (
+            <Select
+              value={selectedSector}
+              onChange={(val) => setSelectedSector(val)}
+              options={[
+                { value: "ALL", label: "All Sectors" },
+                ...uniqueSectors.map((s) => ({ value: s, label: s })),
+              ]}
+            />
+          )}
+
+          <Select
+            value={selectedCriticality}
+            onChange={(val) => setSelectedCriticality(val)}
+            options={[
+              { value: "ALL", label: "All Criticality" },
+              { value: "CRITICAL", label: "Critical" },
+              { value: "HIGH", label: "High" },
+              { value: "MEDIUM", label: "Medium" },
+            ]}
+          />
+        </div>
+
+        {/* Metadata count */}
+        <span className="text-xs font-mono text-[var(--muted)] pr-1 select-none">
+          {filteredAndSortedEntities.length} of {entities.length} entities
+        </span>
+      </div>
+
+      {/* Table Section */}
       {filteredAndSortedEntities.length === 0 ? (
         <EmptyState
           title="No entities match criteria"
@@ -214,59 +297,85 @@ export default function CSEListPage() {
           }}
         />
       ) : (
-        <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
+        <div className="border border-[var(--border)] rounded-2xl overflow-hidden bg-[var(--surface)] shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--surface-secondary)] text-[var(--muted)] font-medium border-b border-[var(--border)]">
+            <table className="w-full text-left text-[13.5px]">
+              <thead className="bg-[var(--surface-secondary)]/50 text-[var(--muted)] font-medium border-b border-[var(--border)]">
                 <tr>
                   <th
                     onClick={() => toggleSort("entity_id")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-5 py-3 text-[11px] font-semibold uppercase tracking-wider cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap text-left align-middle"
                   >
-                    Entity
+                    <div className="flex items-center gap-1.5">
+                      <span>Entity</span>
+                      {renderSortIndicator("entity_id")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("sector")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Sector
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Sector</span>
+                      {renderSortIndicator("sector")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("overall_score")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Risk Score
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Risk Score</span>
+                      {renderSortIndicator("overall_score")}
+                    </div>
                   </th>
-                  <th className="px-4 py-2.5 font-mono text-[10px] uppercase">Band</th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center select-none whitespace-nowrap align-middle">
+                    Criticality
+                  </th>
                   <th
                     onClick={() => toggleSort("escalation_score")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Escalation
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Escalation</span>
+                      {renderSortIndicator("escalation_score")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("investigation_score")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Investigation
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Investigation</span>
+                      {renderSortIndicator("investigation_score")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("remediation_score")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Remediation
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Remediation</span>
+                      {renderSortIndicator("remediation_score")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("monitoring_score")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Monitoring
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Monitoring</span>
+                      {renderSortIndicator("monitoring_score")}
+                    </div>
                   </th>
                   <th
                     onClick={() => toggleSort("assessment_coverage")}
-                    className="px-4 py-2.5 font-mono text-[10px] uppercase text-right cursor-pointer hover:text-[var(--fg)]"
+                    className="group px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-center cursor-pointer hover:text-[var(--fg)] select-none whitespace-nowrap align-middle"
                   >
-                    Coverage
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span>Coverage</span>
+                      {renderSortIndicator("assessment_coverage")}
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -275,40 +384,42 @@ export default function CSEListPage() {
                   <tr
                     key={e.entity_id}
                     onClick={() => router.push(`/cses/${e.entity_id}`)}
-                    className="hover:bg-[var(--surface-secondary)] transition cursor-pointer group"
+                    className="hover:bg-[var(--surface-secondary)]/60 transition-colors duration-150 cursor-pointer group"
                   >
-                    <td className="px-4 py-3">
-                      <span className="font-mono font-semibold text-[var(--fg)] block">
+                    <td className="px-5 py-4 align-middle whitespace-nowrap">
+                      <span className="font-semibold text-[14px] text-[var(--fg)] block tracking-tight">
                         {e.entity_id}
                       </span>
                       {e.name && (
-                        <span className="text-[11px] text-[var(--muted)] block mt-0.5">
+                        <span className="text-[12.5px] text-[var(--muted)] block mt-0.5">
                           {e.name}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[var(--muted)]">
+                    <td className="px-4 py-4 text-center align-middle text-[13.5px] text-[var(--muted)] whitespace-nowrap">
                       {e.sector || "Energy"}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-sm text-[var(--fg)] tabular-nums">
+                    <td className="px-4 py-4 text-center align-middle font-mono font-semibold text-[14.5px] text-[var(--fg)] tabular-nums whitespace-nowrap">
                       {e.overall_score.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3">
-                      <RiskBandBadge band={e.risk_band} />
+                    <td className="px-4 py-4 text-center align-middle whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        <AppleStatusIndicator band={e.risk_band} />
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-4 text-center align-middle whitespace-nowrap">
                       {renderDimensionCell(e.escalation_score)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-4 text-center align-middle whitespace-nowrap">
                       {renderDimensionCell(e.investigation_score)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-4 text-center align-middle whitespace-nowrap">
                       {renderDimensionCell(e.remediation_score)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-4 text-center align-middle whitespace-nowrap">
                       {renderDimensionCell(e.monitoring_score)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-[11px] text-[var(--muted)] tabular-nums">
+                    <td className="px-5 py-4 text-center align-middle font-mono text-[13px] text-[var(--muted)] tabular-nums whitespace-nowrap">
                       {(e.assessment_coverage * 100).toFixed(0)}%
                     </td>
                   </tr>
@@ -321,3 +432,4 @@ export default function CSEListPage() {
     </div>
   );
 }
+

@@ -7,6 +7,7 @@ from pathlib import Path
 from app.analytics.supervisory_risk.config import (
     CORRELATION_GROUPS,
     DEFERRED_DETECTORS,
+    DIMENSION_METADATA,
     DIMENSION_WEIGHTS,
     DIMENSIONS,
     PRIORITY_THRESHOLDS,
@@ -33,6 +34,7 @@ def write_manifest(
         "input_phase_counts": bundle.phase_counts,
         "dimensions": DIMENSIONS,
         "dimension_weights": DIMENSION_WEIGHTS,
+        "dimensions_config": DIMENSION_METADATA,
         "risk_band_thresholds": {k: list(v) for k, v in RISK_BAND_THRESHOLDS.items()},
         "priority_thresholds": PRIORITY_THRESHOLDS,
         "correlation_groups": {

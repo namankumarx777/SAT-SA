@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import polars as pl
 
+from app.analytics.detectors.models import Evidence, Finding
 from app.analytics.negative_space.baselines import evidence_strength
 from app.analytics.negative_space.definitions import (
     MAX_EVIDENCE_PER_FINDING,
@@ -13,7 +14,6 @@ from app.analytics.negative_space.definitions import (
 )
 from app.analytics.negative_space.evidence import add_evidence, negative_finding, sample_rows
 from app.analytics.negative_space.models import NegativeSpaceDefinition, ObservationWindow
-from app.analytics.rules.models import Evidence, Finding
 
 Bundle = dict[str, pl.DataFrame]
 

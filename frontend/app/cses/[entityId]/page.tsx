@@ -15,7 +15,14 @@ import {
   Download,
 } from "lucide-react";
 import { api } from "../../../src/api";
-import { EntityRisk, RiskContribution, parseFindingIds } from "../../../src/types";
+import {
+  EntityRisk,
+  ManifestData,
+  RiskContribution,
+  parseFindingIds,
+  dimensionConfigFromManifest,
+  riskBandThresholdsFromManifest,
+} from "../../../src/types";
 import {
   RiskBandBadge,
   CorroborationBadge,
@@ -27,45 +34,6 @@ import { RiskDimensionBarChart } from "../../../src/components/RiskProfileCharts
 import { FindingDetailDrawer } from "../../../src/components/FindingDetailDrawer";
 import { LoadingSkeleton, ErrorState } from "../../../src/components/States";
 
-const DIMENSION_CONFIG = [
-  {
-    key: "Escalation",
-    field: "escalation_score",
-    weight: 0.25,
-    desc: "Unescalated critical security cases & escalation execution gaps",
-  },
-  {
-    key: "Investigation",
-    field: "investigation_score",
-    weight: 0.20,
-    desc: "Investigation duration, rapid closure prevalence, & uninvestigated alerts",
-  },
-  {
-    key: "Remediation",
-    field: "remediation_score",
-    weight: 0.20,
-    desc: "Asset vulnerability remediation execution & multi-phase gaps",
-  },
-  {
-    key: "Monitoring",
-    field: "monitoring_score",
-    weight: 0.15,
-    desc: "Critical asset monitoring coverage & negative-space blindspots",
-  },
-  {
-    key: "Operational Discipline",
-    field: "operational_discipline_score",
-    weight: 0.10,
-    desc: "Alert triage activity stability & baseline operational discipline",
-  },
-  {
-    key: "Cyber Resilience",
-    field: "cyber_resilience_score",
-    weight: 0.10,
-    desc: "Contextual multivariate anomaly profile (AN001, capped influence)",
-  },
-];
-
 export default function CSEDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -73,6 +41,7 @@ export default function CSEDetailPage() {
 
   const [entity, setEntity] = useState<EntityRisk | null>(null);
   const [contributions, setContributions] = useState<RiskContribution[]>([]);
+  const [manifest, setManifest] = useState<ManifestData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -114,12 +83,14 @@ export default function CSEDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const [entityRes, contribRes] = await Promise.all([
+      const [entityRes, contribRes, manifestRes] = await Promise.all([
         api.getEntity(entityId),
         api.getContributions(entityId),
+        api.getManifest().catch(() => null),
       ]);
       setEntity(entityRes);
       setContributions(contribRes);
+      setManifest(manifestRes);
     } catch (err: any) {
       setError(err.message || `Failed loading assessment for ${entityId}`);
     } finally {
@@ -132,43 +103,68 @@ export default function CSEDetailPage() {
   }, [entityId]);
 
   if (loading) {
-    return <LoadingSkeleton text={`Loading supervisory assessment for ${entityId}...`} />;
+    return <LoadingSkeleton variant="detail" text={`Loading supervisory assessment for ${entityId}...`} />;
   }
 
   if (error || !entity) {
     return <ErrorState message={error || "Entity assessment not found."} onRetry={fetchData} />;
   }
 
+  const dimensionConfig = dimensionConfigFromManifest(manifest);
+  const thresholds = riskBandThresholdsFromManifest(manifest);
+
   // Format dimension chart data
-  const dimensionChartData = DIMENSION_CONFIG.map((dim) => ({
+  const dimensionChartData = dimensionConfig.map((dim) => ({
     dimension: dim.key,
     score: (entity as any)[dim.field] as number | null,
     weight: dim.weight,
   }));
 
   // Identify elevated dimensions for "Why Flagged"
-  const elevatedDimensions = DIMENSION_CONFIG.filter((d) => {
-    const score = (entity as any)[d.field];
-    return score !== null && score >= 25.0;
-  }).sort((a, b) => ((entity as any)[b.field] || 0) - ((entity as any)[a.field] || 0));
+  const elevatedDimensions = dimensionConfig
+    .filter((d) => {
+      const score = (entity as any)[d.field];
+      return score !== null && score >= thresholds.moderate;
+    })
+    .sort((a, b) => ((entity as any)[b.field] || 0) - ((entity as any)[a.field] || 0));
+
+  // Derive the primary correlation group from the manifest for the top risk dimension
+  const topGroup = Object.entries(manifest?.correlation_groups ?? {}).find(
+    ([, g]) => g.dimension.toLowerCase() === entity.top_risk_dimension.toLowerCase(),
+  );
+  const groupKey = topGroup?.[0] ?? null;
+  const groupDetectors = topGroup?.[1].detectors ?? [];
 
   // Find primary finding for the top elevated dimension (e.g. EG002 for Investigation)
   const topContribution =
-    contributions.find(
-      (c) =>
-        c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()) &&
-        (c.corroboration_group === "INVESTIGATION_EFFORT" || c.signal_name.includes("INVESTIGATION_EFFORT")),
-    ) ||
+    (groupKey
+      ? contributions.find(
+          (c) =>
+            c.corroboration_group === groupKey &&
+            c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()),
+        )
+      : undefined) ||
     contributions.find((c) =>
       c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()),
     );
   const topFindingIds = parseFindingIds(topContribution?.supporting_finding_ids);
   const fallbackFindingIds = parseFindingIds(contributions[0]?.supporting_finding_ids);
-  const primaryFindingId =
-    topFindingIds.find((id) => id === "F-3e6ce30d9c2a6646") ||
-    topFindingIds[0] ||
-    fallbackFindingIds[0] ||
-    "F-3e6ce30d9c2a6646";
+  const primaryFindingId = topFindingIds[0] ?? fallbackFindingIds[0] ?? null;
+
+  // Corroboration callout, derived from the manifest group + actual contributions
+  const corroborationContribs = groupDetectors.length
+    ? contributions.filter((c) => groupDetectors.includes(c.detector_id))
+    : [];
+  const corroborationPhases = Array.from(
+    new Set(corroborationContribs.map((c) => c.source_phase)),
+  ).sort();
+  const corroborationDetectors = Array.from(
+    new Set(corroborationContribs.map((c) => c.detector_id)),
+  );
+  const corroborationGroupId = groupKey ?? "INVESTIGATION_EFFORT";
+  const corroborationDescription =
+    topGroup?.[1].description ??
+    "Multiple analytical detectors observe the same underlying operational deficiency.";
 
   return (
     <div className="space-y-8">
@@ -288,32 +284,37 @@ export default function CSEDetailPage() {
                   Corroboration
                 </span>
                 <span className="text-xs font-mono text-[var(--muted)]">
-                  Phase 5 · Phase 6 · Phase 8
+                  {corroborationPhases.length > 0
+                    ? corroborationPhases.map((p) => `Phase ${p.replace("phase", "")}`).join(" · ")
+                    : "Single Phase"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--muted)]">
-                <span>R004</span>
-                <span>·</span>
-                <span>EG002</span>
-                <span>·</span>
-                <span>PB002</span>
-                <span>·</span>
-                <span>AN001</span>
+                <span>{corroborationDetectors.length > 0 ? corroborationDetectors.join(" · ") : "—"}</span>
               </div>
             </div>
 
             <p className="text-xs text-[var(--muted)] leading-relaxed">
-              Multiple analytical detectors observe the same underlying operational deficiency. SAT-SA consolidates them within the <strong>INVESTIGATION_EFFORT</strong> correlation group instead of penalizing the entity with additive double-counting.
+              Multiple analytical detectors observe the same underlying operational deficiency. SAT-SA consolidates them within the <strong>{corroborationGroupId}</strong> correlation group instead of penalizing the entity with additive double-counting.
+              {corroborationDescription && (
+                <span className="block mt-1 text-[var(--subtle)]">{corroborationDescription}</span>
+              )}
             </p>
 
             <div className="pt-1">
-              <button
-                onClick={() => setInspectedFindingId(primaryFindingId)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-tertiary)] text-[var(--fg)] transition"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Inspect Primary Evidence ({primaryFindingId}) &rarr;</span>
-              </button>
+              {primaryFindingId ? (
+                <button
+                  onClick={() => setInspectedFindingId(primaryFindingId)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-tertiary)] text-[var(--fg)] transition"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Inspect Primary Evidence ({primaryFindingId}) &rarr;</span>
+                </button>
+              ) : (
+                <span className="text-xs font-mono text-[var(--subtle)]">
+                  No primary evidence finding available.
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -334,7 +335,7 @@ export default function CSEDetailPage() {
                   >
                     <div>
                       <span className="font-medium text-xs text-[var(--fg)]">{d.key}</span>
-                      <span className="text-[11px] text-[var(--muted)] block">{d.desc}</span>
+                      <span className="text-[11px] text-[var(--muted)] block">{d.description}</span>
                     </div>
                     <span className="font-mono text-sm font-bold tabular-nums text-[var(--fg)]">
                       {score?.toFixed(1)}
@@ -359,13 +360,14 @@ export default function CSEDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {DIMENSION_CONFIG.map((dim) => (
+          {dimensionConfig.map((dim) => (
             <DimensionCard
               key={dim.key}
               dimension={dim.key}
               score={(entity as any)[dim.field] as number | null}
               weight={dim.weight}
-              description={dim.desc}
+              description={dim.description}
+              thresholds={thresholds}
             />
           ))}
         </div>
@@ -375,7 +377,7 @@ export default function CSEDetailPage() {
           <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
             Dimension Profile Comparison
           </span>
-          <RiskDimensionBarChart data={dimensionChartData} />
+          <RiskDimensionBarChart data={dimensionChartData} thresholds={thresholds} />
         </div>
       </div>
 

@@ -8,6 +8,8 @@ from typing import Any
 
 import polars as pl
 
+from app.analytics.datasets import resolve_feature_path, resolve_phase_dir
+
 
 @dataclass
 class StandardizedFinding:
@@ -87,20 +89,6 @@ def _parse_json_list(val: Any) -> list[dict[str, Any]] | None:
     return None
 
 
-def _find_phase_dir(root: Path, prefixes: list[str]) -> Path:
-    for prefix in prefixes:
-        candidate = root / prefix
-        if candidate.is_dir() and (candidate / "findings.parquet").is_file():
-            return candidate
-        # Also check root directly if root is already the phase dir
-        if root.name.startswith(prefix) and (root / "findings.parquet").is_file():
-            return root
-    # Check if files are directly inside root
-    if (root / "findings.parquet").is_file():
-        return root
-    raise FileNotFoundError(f"Could not locate findings for prefixes {prefixes} in {root}")
-
-
 def _load_phase_findings(
     phase_dir: Path, source_phase: str
 ) -> tuple[list[StandardizedFinding], list[StandardizedEvidence]]:
@@ -176,22 +164,19 @@ def load_upstream_bundle(
     phase7_dir: str | Path | None = None,
     phase8_dir: str | Path | None = None,
 ) -> UpstreamBundle:
-    """Load and harmonize outputs across Phases 4, 5, 6, 7, and 8."""
+    """Load and harmonize outputs across Phases 4, 5, 6, 7, and 8.
+
+    Phase directories are resolved through the registered dataset convention
+    (``app.analytics.datasets``); explicit ``phaseX_dir`` overrides always win.
+    Missing phases are recorded with zero counts and a ``NOT_FOUND`` source path
+    instead of failing the run.
+    """
     root = Path(root_dir)
 
     # 1. Phase 4 Entity Features (Denominators & Metadata)
-    if phase4_dir:
-        p4_path = Path(phase4_dir) / "entity_features.parquet"
-    else:
-        candidates = [
-            root / "phase4-final" / "entity_features.parquet",
-            root / "phase4-features" / "entity_features.parquet",
-            root / "phase4-check" / "entity_features.parquet",
-            root / "entity_features.parquet",
-        ]
-        p4_path = next((p for p in candidates if p.is_file()), None)
-        if p4_path is None:
-            raise FileNotFoundError(f"Cannot find entity_features.parquet in {root}")
+    p4_path = resolve_feature_path(root, "phase4", phase4_dir)
+    if p4_path is None:
+        raise FileNotFoundError(f"Cannot find entity_features.parquet in {root}")
 
     df_entities = pl.read_parquet(p4_path)
     entities_map: dict[str, dict[str, Any]] = {
@@ -199,26 +184,20 @@ def load_upstream_bundle(
     }
 
     # 2. Phase 5, 6, 7, 8 Findings & Evidence
-    phase_configs = [
-        ("phase5", phase5_dir, ["phase5-final", "phase5-findings", "phase5-final-a"]),
-        ("phase6", phase6_dir, ["execution_gap-final", "execution_gap"]),
-        ("phase7", phase7_dir, ["negative_space-final", "negative_space"]),
-        ("phase8", phase8_dir, ["peer_anomaly-final", "peer_anomaly"]),
-    ]
+    phase_overrides = {
+        "phase5": phase5_dir,
+        "phase6": phase6_dir,
+        "phase7": phase7_dir,
+        "phase8": phase8_dir,
+    }
 
     all_findings: list[StandardizedFinding] = []
     evidence_by_finding: dict[str, list[StandardizedEvidence]] = {}
     phase_counts: dict[str, int] = {}
     source_paths: dict[str, str] = {"phase4": str(p4_path)}
 
-    for phase_name, explicit_dir, prefix_candidates in phase_configs:
-        if explicit_dir:
-            p_dir = Path(explicit_dir)
-        else:
-            try:
-                p_dir = _find_phase_dir(root, prefix_candidates)
-            except FileNotFoundError:
-                p_dir = None
+    for phase_name in ("phase5", "phase6", "phase7", "phase8"):
+        p_dir = resolve_phase_dir(root, phase_name, phase_overrides.get(phase_name))
 
         if p_dir is not None and p_dir.is_dir():
             findings, evidence = _load_phase_findings(p_dir, phase_name)

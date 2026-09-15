@@ -72,15 +72,15 @@ export function Select({
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`inline-flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] font-medium transition-all hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--fg)] cursor-pointer select-none ${
-          size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"
+        className={`inline-flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] font-medium transition-all hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--fg)] cursor-pointer select-none ${
+          size === "sm" ? "px-3 py-1.5 text-[13px] h-[34px]" : "px-3.5 py-2 text-sm h-[38px]"
         }`}
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
-          className={`w-3 h-3 text-[var(--muted)] shrink-0 transition-transform duration-150 ${
+          className={`w-3.5 h-3.5 text-[var(--muted)] shrink-0 transition-transform duration-150 ${
             isOpen ? "rotate-180 text-[var(--fg)]" : ""
           }`}
         />
@@ -90,7 +90,7 @@ export function Select({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 z-50 mt-1 min-w-[140px] max-h-60 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1 shadow-xl focus:outline-none animate-in fade-in zoom-in-95 duration-100"
+          className="absolute left-0 z-50 mt-1.5 min-w-[150px] max-h-60 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 shadow-lg focus:outline-none animate-in fade-in zoom-in-95 duration-100"
         >
           {normalizedOptions.map((opt) => {
             const isSelected = opt.value === value;
@@ -103,7 +103,7 @@ export function Select({
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors ${
+                className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-colors ${
                   isSelected
                     ? "bg-[var(--surface-secondary)] text-[var(--fg)] font-semibold"
                     : "text-[var(--muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--fg)]"
@@ -111,7 +111,7 @@ export function Select({
               >
                 <span className="truncate">{opt.label}</span>
                 {isSelected && (
-                  <Check className="w-3 h-3 text-[var(--fg)] shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-[var(--fg)] shrink-0" />
                 )}
               </div>
             );

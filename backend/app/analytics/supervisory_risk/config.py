@@ -93,6 +93,47 @@ CORRELATION_GROUPS: dict[str, dict[str, Any]] = {
 CORROBORATION_BOOST_PER_PHASE = 0.12
 MAX_CORROBORATION_BOOST = 0.30
 
+# Canonical, ordered dimension metadata consumed by dashboards and manifests.
+# `field` is the entity_risk.parquet column for the dimension's score.
+DIMENSION_METADATA: list[dict[str, Any]] = [
+    {
+        "key": "Escalation",
+        "field": "escalation_score",
+        "weight": DIMENSION_WEIGHTS["Escalation"],
+        "description": "Unescalated critical security cases & escalation execution gaps",
+    },
+    {
+        "key": "Investigation",
+        "field": "investigation_score",
+        "weight": DIMENSION_WEIGHTS["Investigation"],
+        "description": "Investigation duration, rapid closure prevalence, & uninvestigated alerts",
+    },
+    {
+        "key": "Remediation",
+        "field": "remediation_score",
+        "weight": DIMENSION_WEIGHTS["Remediation"],
+        "description": "Asset vulnerability remediation execution & multi-phase gaps",
+    },
+    {
+        "key": "Monitoring",
+        "field": "monitoring_score",
+        "weight": DIMENSION_WEIGHTS["Monitoring"],
+        "description": "Critical asset monitoring coverage & negative-space blindspots",
+    },
+    {
+        "key": "Operational Discipline",
+        "field": "operational_discipline_score",
+        "weight": DIMENSION_WEIGHTS["Operational Discipline"],
+        "description": "Alert triage activity stability & baseline operational discipline",
+    },
+    {
+        "key": "Cyber Resilience",
+        "field": "cyber_resilience_score",
+        "weight": DIMENSION_WEIGHTS["Cyber Resilience"],
+        "description": "Contextual multivariate anomaly profile (AN001, capped influence)",
+    },
+]
+
 # Severity weights used when scaling record-level finding prevalence
 SEVERITY_WEIGHTS: dict[str, float] = {
     "Critical": 1.0,

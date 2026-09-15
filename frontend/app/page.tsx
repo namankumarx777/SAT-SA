@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, ArrowRight } from "lucide-react";
 import { api } from "../src/api";
-import { EntityRisk, ReviewQueueItem } from "../src/types";
+import {
+  EntityRisk,
+  ReviewQueueItem,
+  bandRangeLabel,
+  riskBandThresholdsFromManifest,
+} from "../src/types";
 import { RiskBandBadge } from "../src/components/Badges";
 import { LoadingSkeleton, ErrorState, EmptyState } from "../src/components/States";
 import { Select } from "../src/components/Select";
@@ -14,6 +19,7 @@ export default function OverviewPage() {
   const router = useRouter();
   const [entities, setEntities] = useState<EntityRisk[]>([]);
   const [queue, setQueue] = useState<ReviewQueueItem[]>([]);
+  const [bandThresholds, setBandThresholds] = useState<ReturnType<typeof riskBandThresholdsFromManifest> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,12 +32,14 @@ export default function OverviewPage() {
     setLoading(true);
     setError(null);
     try {
-      const [entitiesRes, queueRes] = await Promise.all([
+      const [entitiesRes, queueRes, manifestRes] = await Promise.all([
         api.getEntities(),
         api.getReviewQueue(),
+        api.getManifest().catch(() => null),
       ]);
       setEntities(entitiesRes);
       setQueue(queueRes);
+      setBandThresholds(riskBandThresholdsFromManifest(manifestRes));
     } catch (err: any) {
       setError(err.message || "Failed loading supervisory overview");
     } finally {
@@ -81,7 +89,7 @@ export default function OverviewPage() {
   }, [entities, selectedBand, selectedSector, searchQuery]);
 
   if (loading) {
-    return <LoadingSkeleton text="Loading supervisory overview..." />;
+    return <LoadingSkeleton variant="overview" text="Loading supervisory overview..." />;
   }
 
   if (error) {
@@ -129,7 +137,9 @@ export default function OverviewPage() {
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--risk-high-text)]">
             {highRiskEntities}
           </div>
-          <span className="text-[10px] text-[var(--muted)] block">Score 50.0–74.9</span>
+          <span className="text-[10px] text-[var(--muted)] block">
+            {bandThresholds ? bandRangeLabel("HIGH", bandThresholds) : "Score 50.0–74.9"}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
@@ -139,7 +149,9 @@ export default function OverviewPage() {
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--fg)]">
             {criticalEntities}
           </div>
-          <span className="text-[10px] text-[var(--subtle)] block">Score &ge; 75.0</span>
+          <span className="text-[10px] text-[var(--subtle)] block">
+            {bandThresholds ? bandRangeLabel("CRITICAL", bandThresholds) : "Score \u2265 75.0"}
+          </span>
         </div>
 
         <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">

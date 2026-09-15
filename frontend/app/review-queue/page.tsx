@@ -72,7 +72,7 @@ export default function ReviewQueuePage() {
   const lowPriorityCount = queue.filter((q) => q.priority === "LOW").length;
 
   if (loading) {
-    return <LoadingSkeleton text="Loading supervisory review queue..." />;
+    return <LoadingSkeleton variant="queue" text="Loading supervisory review queue..." />;
   }
 
   if (error) {
@@ -177,82 +177,130 @@ export default function ReviewQueuePage() {
           }}
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3.5">
           {filteredQueue.map((item) => {
             const firstFindingId =
               item.record_type === "FINDING" && item.record_id.startsWith("F-")
                 ? item.record_id
                 : parseFindingIds(item.supporting_finding_ids)[0] || null;
 
+            // Parse structured reason for clean typographic hierarchy
+            const colonIdx = item.reason.indexOf(":");
+            let title = item.reason;
+            let category: string | null = null;
+            if (colonIdx !== -1) {
+              const rawCategory = item.reason.slice(0, colonIdx).trim();
+              title = item.reason.slice(colonIdx + 1).trim();
+              category = rawCategory.replace(/\s*\(([^)]+)\)/, " · $1");
+            }
+
             return (
               <div
                 key={`${item.rank}-${item.record_id}`}
-                className="p-4 sm:p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--muted)] transition-colors flex flex-col md:flex-row md:items-start justify-between gap-4 group"
+                className="p-5 sm:p-6 rounded-[18px] border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--muted)]/40 hover:shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-5 group"
               >
-                {/* Left & Center: Rank Badge + Details */}
-                <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                  {/* Rank Badge */}
-                  <div className="w-8 h-8 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] flex items-center justify-center font-mono text-xs font-bold text-[var(--muted)] shrink-0 select-none">
+                {/* Left & Center: Rank + Typographic Hierarchy */}
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  {/* Subtle Rank Number */}
+                  <span className="font-mono text-xs font-medium text-[var(--muted)] shrink-0 pt-0.5 select-none w-5">
                     {String(item.rank).padStart(2, "0")}
-                  </div>
+                  </span>
 
-                  {/* Body details */}
+                  {/* Body Content */}
                   <div className="space-y-1.5 flex-1 min-w-0">
-                    {/* Header line: Entity • Record ID • Type */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {/* 1. Top Metadata Line: CSE-011 · Finding */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
                       <Link
                         href={`/cses/${item.entity_id}`}
-                        className="font-mono font-bold text-[var(--fg)] hover:underline"
+                        className="font-medium text-[var(--fg)] hover:underline hover:opacity-80 transition"
                       >
                         {item.entity_id}
                       </Link>
-                      <span className="text-[var(--subtle)]">•</span>
-                      <span className="font-mono text-[var(--muted)] font-medium">
-                        {item.record_id}
+                      <span className="text-[var(--subtle)]">·</span>
+                      <span className="capitalize text-[var(--muted)]">
+                        {item.record_type.toLowerCase()}
                       </span>
-                      <span className="text-[var(--subtle)]">•</span>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--subtle)] px-1.5 py-0.5 rounded bg-[var(--surface-secondary)] border border-[var(--border-subtle)]">
-                        {item.record_type}
-                      </span>
+                      {item.record_id && item.record_id !== item.entity_id && (
+                        <>
+                          <span className="text-[var(--subtle)]">·</span>
+                          <span
+                            className="font-mono text-[11px] text-[var(--muted)] opacity-50 truncate max-w-[160px]"
+                            title={item.record_id}
+                          >
+                            {item.record_id}
+                          </span>
+                        </>
+                      )}
                     </div>
 
-                    {/* Reason Text */}
-                    <p className="text-xs text-[var(--fg)] leading-relaxed">
-                      {item.reason}
-                    </p>
+                    {/* 2. Main Finding Focus */}
+                    <h3 className="text-[15px] sm:text-[16px] font-semibold text-[var(--fg)] tracking-[-0.01em] leading-snug">
+                      {title}
+                    </h3>
 
-                    {/* Evidence & Context Badge */}
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <EvidenceStrengthBadge strength={item.evidence_strength} />
+                    {/* 3. Secondary Metadata & Evidence */}
+                    <div className="flex flex-wrap items-center gap-2 text-[13px] text-[var(--muted)] pt-0.5">
+                      {category && <span>{category}</span>}
+                      {category && item.evidence_strength && (
+                        <span className="text-[var(--subtle)]">·</span>
+                      )}
+                      {item.evidence_strength && (
+                        <span className="text-[var(--muted)]">
+                          {item.evidence_strength} evidence
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side: Score, Priority Badge & Action */}
-                <div className="flex items-center md:items-end justify-between md:justify-start md:flex-col gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[var(--border-subtle)] min-w-[160px] text-right">
-                  {/* Score & Priority Stack */}
-                  <div className="flex md:flex-col items-center md:items-end gap-2 md:gap-1.5">
-                    <div className="font-mono text-base font-bold tabular-nums text-[var(--fg)] leading-none">
+                {/* Right Side: Score, Minimal Priority & Clean Action */}
+                <div className="flex items-center md:items-end justify-between md:justify-center md:flex-col gap-4 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[var(--border-subtle)] md:min-w-[140px] text-right">
+                  {/* Score & Minimal Priority Indicator */}
+                  <div className="flex md:flex-col items-center md:items-end gap-2.5 md:gap-1">
+                    <span className="font-mono text-[22px] sm:text-[24px] font-bold tracking-tight text-[var(--fg)] tabular-nums leading-none">
                       {item.priority_score.toFixed(1)}
-                    </div>
-                    <PriorityBadge priority={item.priority} />
+                    </span>
+                    {item.priority === "HIGH" ? (
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                        <span>High priority</span>
+                      </div>
+                    ) : item.priority === "MEDIUM" ? (
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                        <span>Medium priority</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--muted)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600 shrink-0" />
+                        <span>Low priority</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Buttons: Inspect & Direct Page Navigation Arrow */}
                   <div className="flex items-center gap-2 pt-0 md:pt-1">
-                    {firstFindingId && (
+                    {firstFindingId ? (
                       <button
                         onClick={() => setInspectedFindingId(firstFindingId)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--fg)] transition cursor-pointer"
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--fg)] transition-all cursor-pointer shadow-xs"
                       >
-                        <span>Inspect</span>
-                        <ArrowRight className="w-3.5 h-3.5 text-[var(--muted)]" />
+                        Inspect
                       </button>
+                    ) : (
+                      <Link
+                        href={`/cses/${item.entity_id}`}
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--fg)] transition-all cursor-pointer shadow-xs"
+                      >
+                        View entity
+                      </Link>
                     )}
+
+                    {/* Arrow Button to Open CSE Entity Page */}
                     <Link
                       href={`/cses/${item.entity_id}`}
-                      className="p-1.5 rounded-md border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-secondary)] text-[var(--muted)] hover:text-[var(--fg)] transition"
-                      title="Navigate to entity"
+                      className="inline-flex items-center justify-center p-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--muted)] hover:text-[var(--fg)] transition-all cursor-pointer shadow-xs"
+                      title={`Open ${item.entity_id} Assessment Page`}
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Link>

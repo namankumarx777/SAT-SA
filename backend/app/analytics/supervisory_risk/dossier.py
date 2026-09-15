@@ -8,6 +8,7 @@ from typing import Any
 
 import polars as pl
 
+from app.analytics.datasets import resolve_feature_path, resolve_phase_dir
 from app.analytics.supervisory_risk.config import DIMENSIONS, DIMENSION_WEIGHTS, RISK_BAND_THRESHOLDS
 from app.analytics.supervisory_risk.inputs import load_upstream_bundle
 
@@ -17,9 +18,9 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 def generate_entity_dossier_data(entity_id: str, data_root: str | Path | None = None) -> dict[str, Any]:
     """Compile a complete, auditable supervisory examination dossier for an entity."""
     root = Path(data_root) if data_root else (REPO_ROOT / "data" / "processed")
-    risk_dir = root / "supervisory_risk-final"
-    if not risk_dir.is_dir():
-        risk_dir = root / "supervisory_risk"
+    risk_dir = resolve_phase_dir(root, "phase9")
+    if risk_dir is None:
+        raise FileNotFoundError(f"Cannot locate Phase 9 supervisory risk outputs under {root}")
 
     # 1. Load entity risk
     entity_risk_path = risk_dir / "entity_risk.parquet"
@@ -33,10 +34,8 @@ def generate_entity_dossier_data(entity_id: str, data_root: str | Path | None = 
 
     # 2. Load entity metadata if available
     entity_meta = {}
-    meta_path = root / "phase4-features" / "entity_features.parquet"
-    if not meta_path.is_file():
-        meta_path = root / "entity_features.parquet"
-    if meta_path.is_file():
+    meta_path = resolve_feature_path(root, "phase4")
+    if meta_path is not None:
         df_meta = pl.read_parquet(meta_path).filter(pl.col("entity_id") == entity_id)
         if not df_meta.is_empty():
             entity_meta = df_meta.to_dicts()[0]

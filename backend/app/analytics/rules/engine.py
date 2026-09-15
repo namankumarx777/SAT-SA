@@ -8,30 +8,14 @@ from pathlib import Path
 
 import polars as pl
 
+from app.analytics.detectors.bundle import load_feature_bundle
+from app.analytics.detectors.models import Evidence, Finding
+from app.analytics.detectors.output import evidence_frame, findings_frame, order_evidence, order_findings
 from app.analytics.rules.definitions import RULES, enabled_rules
 from app.analytics.rules.evaluators import EVALUATORS
-from app.analytics.rules.models import Evidence, Finding, RuleDefinition, RuleRunResult
+from app.analytics.rules.models import RuleDefinition, RuleRunResult
 
-FEATURE_TABLES = ("alert_features", "case_features", "asset_features", "entity_features", "entity_month_features")
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[4] / "data" / "processed" / "phase5-findings"
-
-
-def load_feature_bundle(input_dir: str | Path) -> dict[str, pl.DataFrame]:
-    """Load all required Phase 4 feature tables from a feature output directory."""
-    directory = Path(input_dir)
-    if not directory.is_dir():
-        raise ValueError(f"Feature input directory not found: {directory}")
-    bundle: dict[str, pl.DataFrame] = {}
-    missing: list[str] = []
-    for name in FEATURE_TABLES:
-        path = directory / f"{name}.parquet"
-        if not path.is_file():
-            missing.append(name)
-        else:
-            bundle[name] = pl.read_parquet(path)
-    if missing:
-        raise ValueError(f"Feature dataset is missing: {', '.join(missing)}")
-    return bundle
 
 
 def evaluate_rule(rule: RuleDefinition, feature_bundle: dict[str, pl.DataFrame]) -> tuple[list[Finding], list[Evidence]]:
@@ -54,46 +38,17 @@ def evaluate_all_rules(feature_bundle: dict[str, pl.DataFrame]) -> RuleRunResult
         evaluated.append(rule.rule_id)
         findings.extend(rule_findings)
         evidence.extend(rule_evidence)
-    unique_findings = {finding.id: finding for finding in findings}
-    unique_evidence = {item.id: item for item in evidence}
-    ordered_findings = sorted(unique_findings.values(), key=lambda item: (item.rule_id, item.entity_id, item.id))
-    ordered_evidence = sorted(unique_evidence.values(), key=lambda item: (item.finding_id, item.source_type, item.source_id, item.field, item.id))
-    finding_ids = {finding.id for finding in ordered_findings}
-    ordered_evidence = [item for item in ordered_evidence if item.finding_id in finding_ids]
+    ordered_findings = order_findings(findings)
+    ordered_evidence = order_evidence(evidence, (item.id for item in ordered_findings))
     return RuleRunResult(findings=ordered_findings, evidence=ordered_evidence, rules_evaluated=evaluated)
-
-
-def _findings_frame(findings: list[Finding]) -> pl.DataFrame:
-    if not findings:
-        return pl.DataFrame(schema={
-            "id": pl.String, "rule_id": pl.String, "entity_id": pl.String, "finding_type": pl.String,
-            "severity": pl.String, "confidence": pl.String, "title": pl.String, "summary": pl.String,
-            "rationale": pl.String, "status": pl.String, "created_at": pl.Datetime,
-            "metric_name": pl.String, "observed_value": pl.Float64, "expected_value": pl.Float64,
-            "threshold": pl.Float64, "population_size": pl.Int64,
-        })
-    return pl.DataFrame([finding.model_dump() for finding in findings]).sort(["rule_id", "entity_id", "id"])
-
-
-def _evidence_frame(evidence: list[Evidence]) -> pl.DataFrame:
-    if not evidence:
-        return pl.DataFrame(schema={
-            "id": pl.String, "finding_id": pl.String, "source_type": pl.String, "source_id": pl.String,
-            "entity_id": pl.String, "field": pl.String, "value": pl.String, "reason": pl.String,
-        })
-    rows = [item.model_dump() for item in evidence]
-    for row in rows:
-        if not isinstance(row["value"], (str, int, float, bool)) and row["value"] is not None:
-            row["value"] = str(row["value"])
-    return pl.DataFrame(rows).sort(["finding_id", "source_type", "source_id", "field", "id"])
 
 
 def write_rule_outputs(result: RuleRunResult, output_dir: str | Path, dataset_id: str) -> dict[str, object]:
     """Write deterministic findings/evidence Parquet and a rule manifest."""
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
-    _findings_frame(result.findings).write_parquet(destination / "findings.parquet")
-    _evidence_frame(result.evidence).write_parquet(destination / "evidence.parquet")
+    findings_frame(result.findings).write_parquet(destination / "findings.parquet")
+    evidence_frame(result.evidence).write_parquet(destination / "evidence.parquet")
     manifest = {
         "schema_version": "1.0",
         "dataset_id": dataset_id,

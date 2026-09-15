@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
   }, []);
 
   if (loading) {
-    return <LoadingSkeleton text="Loading supervisory analytics..." />;
+    return <LoadingSkeleton variant="analytics" text="Loading supervisory analytics..." />;
   }
 
   if (error) {

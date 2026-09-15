@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 import polars as pl
 
+from app.analytics.detectors.models import Evidence, Finding
 from app.analytics.execution_gap.baselines import confidence_for_gap, population_median
 from app.analytics.execution_gap.definitions import (
     CRITICAL_ESCALATION_EXPECTED_RATE,
@@ -19,7 +20,6 @@ from app.analytics.execution_gap.definitions import (
 )
 from app.analytics.execution_gap.evidence import case_evidence, execution_finding, feature_evidence
 from app.analytics.execution_gap.models import ExecutionGapDefinition
-from app.analytics.rules.models import Evidence, Finding
 
 Bundle = dict[str, pl.DataFrame]
 Evaluator = Callable[[ExecutionGapDefinition, Bundle], tuple[list[Finding], list[Evidence]]]
