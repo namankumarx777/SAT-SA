@@ -25,10 +25,11 @@ DETECTORS: dict[str, NegativeSpaceDefinition] = {
         thresholds={"minimum_critical_assets": MIN_CRITICAL_ASSETS, "minimum_inactive_critical": MIN_INACTIVE_CRITICAL},
     ),
     "NS003": NegativeSpaceDefinition(
-        detector_id="NS003", name="Missing Alert Source Activity",
-        description="Deferred: the current contract does not establish which alert sources each entity is expected to use historically or explicitly.",
-        severity="Medium", enabled=False, data_requirements=["alert_features"], expectation_method="HISTORICAL_PRESENCE",
-        deferred_reason="No source expectation or sufficient historical source-period contract is available.",
+        detector_id="NS003", name="Missing Security Telemetry Category Blindspot",
+        description="Absence of alerts from expected core telemetry categories (e.g. EDR, Firewall/Network, IAM, Cloud Security) observed across peer entities.",
+        severity="Medium", enabled=True, data_requirements=["alert_features", "entity_features"],
+        expectation_method="COHORT_TELEMETRY_PRESENCE", minimum_population=20,
+        thresholds={"cohort_prevalence_threshold": 0.60, "minimum_entity_alerts": 20},
     ),
     "NS004": NegativeSpaceDefinition(
         detector_id="NS004", name="Unexpectedly Low Activity",

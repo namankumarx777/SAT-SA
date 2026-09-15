@@ -169,3 +169,31 @@ def get_review_queue_item(record_id: str, output_path: str | None = None) -> dic
     return _normalize_dict_lists(rows)[0]
 
 
+@router.get("/entities/{entity_id}/dossier")
+def get_entity_dossier(entity_id: str, input_path: str | None = None) -> dict[str, Any]:
+    from app.analytics.supervisory_risk.dossier import generate_entity_dossier_data
+    in_dir = Path(input_path) if input_path else (REPO_ROOT / "data" / "processed")
+    try:
+        return generate_entity_dossier_data(entity_id, in_dir)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed generating dossier: {exc}") from exc
+
+
+@router.get("/entities/{entity_id}/dossier/html")
+def get_entity_dossier_html(entity_id: str, input_path: str | None = None) -> Any:
+    from fastapi.responses import HTMLResponse
+    from app.analytics.supervisory_risk.dossier import generate_entity_dossier_data, render_entity_dossier_html
+    in_dir = Path(input_path) if input_path else (REPO_ROOT / "data" / "processed")
+    try:
+        data = generate_entity_dossier_data(entity_id, in_dir)
+        html_content = render_entity_dossier_html(data)
+        return HTMLResponse(content=html_content, status_code=200)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed rendering dossier HTML: {exc}") from exc
+
+
+

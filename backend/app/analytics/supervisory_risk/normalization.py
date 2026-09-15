@@ -201,6 +201,9 @@ def normalize_finding_signal(
         elif detector_id == "NS002":  # Inactive critical assets
             denom = int(entity_metadata.get("critical_assets", 1))
             norm_val = min(100.0, round((obs / max(denom, 1)) * 100.0, 2))
+        elif detector_id == "NS003":  # Missing telemetry category blindspot
+            gap = float(finding.gap_value) if finding.gap_value is not None else 0.5
+            norm_val = min(100.0, round(gap * 100.0, 2))
         elif detector_id == "NS004":  # Unexpectedly low activity vs self-history
             gap = float(finding.gap_value) if finding.gap_value is not None else 0.5
             norm_val = min(100.0, round(gap * 100.0, 2))

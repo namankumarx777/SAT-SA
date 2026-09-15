@@ -57,6 +57,87 @@ def evaluate_ns002(detector: NegativeSpaceDefinition, bundle: Bundle, window: Ob
     return findings, evidence
 
 
+def evaluate_ns003(detector: NegativeSpaceDefinition, bundle: Bundle, window: ObservationWindow) -> tuple[list[Finding], list[Evidence]]:
+    if not window.sufficient:
+        return [], []
+    if "alert_features" not in bundle or bundle["alert_features"].is_empty():
+        return [], []
+    alerts = bundle["alert_features"]
+    if "source" not in alerts.columns:
+        return [], []
+
+    entity_alert_counts = alerts.group_by("entity_id").len().rename({"len": "total_alerts"})
+    min_pop = detector.minimum_population or 20
+    active_entities = entity_alert_counts.filter(pl.col("total_alerts") >= min_pop)
+    if active_entities.height < 2:
+        return [], []
+
+    entity_sources = alerts.group_by(["entity_id", "source"]).len()
+    total_active_entities = active_entities.height
+    source_entity_counts = entity_sources.join(active_entities.select("entity_id"), on="entity_id", how="inner").group_by("source").agg(pl.col("entity_id").n_unique().alias("entity_count"))
+    prevalence_thresh = detector.thresholds.get("cohort_prevalence_threshold", 0.60)
+    expected_sources = source_entity_counts.filter((pl.col("entity_count") / total_active_entities) >= prevalence_thresh).sort("source")["source"].to_list()
+
+    if not expected_sources:
+        return [], []
+
+    findings, evidence = [], []
+    for ent in active_entities.sort("entity_id").to_dicts():
+        ent_id = ent["entity_id"]
+        observed_sources = set(entity_sources.filter(pl.col("entity_id") == ent_id)["source"].to_list())
+        missing_sources = sorted([s for s in expected_sources if s not in observed_sources])
+
+        if not missing_sources:
+            continue
+
+        gap_ratio = len(missing_sources) / len(expected_sources)
+        strength = evidence_strength(int(ent["total_alerts"]), gap_ratio)
+        missing_str = ", ".join(missing_sources)
+        observed_str = ", ".join(sorted(list(observed_sources))) if observed_sources else "None"
+
+        finding = negative_finding(
+            detector_id="NS003",
+            entity_id=ent_id,
+            source_id=ent_id,
+            finding_type="Alert Source Coverage",
+            severity="Medium",
+            strength=strength,
+            title="Absence of expected security telemetry category",
+            summary=f"Entity has no observable alerts from expected core category: {missing_str}.",
+            rationale=(
+                f"Entity has {ent['total_alerts']} total alerts across sources [{observed_str}], "
+                f"but 0 alerts from expected core categories [{missing_str}] present in >= {prevalence_thresh:.0%} "
+                f"of cohort peers ({len(expected_sources)} expected categories total). Observation window: {window.start} to {window.end}."
+            ),
+            observed=len(observed_sources),
+            expected=len(expected_sources),
+            population=int(ent["total_alerts"]),
+            method="cohort_telemetry_presence",
+            baseline_type="cohort_expectation",
+            baseline_value=float(len(expected_sources)),
+            gap=gap_ratio,
+        )
+        findings.append(finding)
+
+        ent_row = {
+            "entity_id": ent_id,
+            "total_alerts": ent["total_alerts"],
+            "observed_sources": observed_str,
+            "missing_categories": missing_str,
+            "expected_categories": ", ".join(expected_sources),
+        }
+        evidence.extend(add_evidence(
+            finding,
+            "alert_feature",
+            ent_id,
+            ["entity_id", "total_alerts", "observed_sources", "missing_categories"],
+            ent_row,
+            f"Entity alert telemetry lacks expected core category: {missing_str}.",
+        ))
+
+    return findings, evidence
+
+
 def evaluate_ns004(detector: NegativeSpaceDefinition, bundle: Bundle, window: ObservationWindow) -> tuple[list[Finding], list[Evidence]]:
     if not window.sufficient:
         return [], []
@@ -95,4 +176,10 @@ def evaluate_ns005(detector: NegativeSpaceDefinition, bundle: Bundle, window: Ob
     return findings, evidence
 
 
-EVALUATORS = {"NS001": evaluate_ns001, "NS002": evaluate_ns002, "NS004": evaluate_ns004, "NS005": evaluate_ns005}
+EVALUATORS = {
+    "NS001": evaluate_ns001,
+    "NS002": evaluate_ns002,
+    "NS003": evaluate_ns003,
+    "NS004": evaluate_ns004,
+    "NS005": evaluate_ns005,
+}

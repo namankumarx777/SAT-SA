@@ -58,4 +58,8 @@ export const api = {
     apiFetch<FindingDetailResponse>(
       `/analytics/supervisory-risk/findings/${encodeURIComponent(findingId)}`,
     ),
+  getEntityDossier: (entityId: string) =>
+    apiFetch<any>(`/analytics/supervisory-risk/entities/${encodeURIComponent(entityId)}/dossier`),
+  getDossierHtmlUrl: (entityId: string) =>
+    `${API_BASE_URL}/analytics/supervisory-risk/entities/${encodeURIComponent(entityId)}/dossier/html`,
 };

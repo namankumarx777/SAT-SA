@@ -69,9 +69,9 @@ CORRELATION_GROUPS: dict[str, dict[str, Any]] = {
     },
     "MONITORING_COVERAGE": {
         "dimension": "Monitoring",
-        "detectors": ["R005", "NS001", "NS002", "PB004", "AN001"],
+        "detectors": ["R005", "NS001", "NS002", "NS003", "PB004", "AN001"],
         "relevant_features": ["monitoring_coverage_rate", "alerts_per_asset", "cases_per_asset"],
-        "description": "Evaluation of asset monitoring telemetry, inactive expected assets, and blindspots.",
+        "description": "Evaluation of asset monitoring telemetry, missing telemetry categories, inactive expected assets, and blindspots.",
     },
     "ACTIVITY_VOLATILITY": {
         "dimension": "Operational Discipline",
@@ -115,6 +115,5 @@ ANOMALY_SCORE_CEILING = 25.0
 # Deferred detectors documented in earlier phases
 DEFERRED_DETECTORS: dict[str, str] = {
     "EG005": "Deferred: lacks defensible documentation-quality standard baseline.",
-    "NS003": "Deferred: no historical alert source expectation contract.",
     "NS006": "Deferred: avoid duplicating Phase 6 critical escalation execution gap.",
 }

@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+
+from app.main import app  # noqa: E402
 
 
 @pytest.fixture
@@ -71,3 +76,26 @@ def test_api_not_found(client: TestClient) -> None:
 
     resp_f = client.get("/analytics/supervisory-risk/findings/NONEXISTENT_FINDING")
     assert resp_f.status_code == 404
+
+    resp_d = client.get("/analytics/supervisory-risk/entities/CSE-NONEXISTENT/dossier")
+    assert resp_d.status_code == 404
+
+
+def test_api_entity_dossier(client: TestClient) -> None:
+    # 1. JSON Dossier
+    resp = client.get("/analytics/supervisory-risk/entities/CSE-011/dossier")
+    assert resp.status_code == 200
+    dossier = resp.json()
+    assert dossier["entity"]["id"] == "CSE-011"
+    assert "supervisory_summary" in dossier
+    assert "dimensions" in dossier
+    assert "supervisory_directives" in dossier
+    assert len(dossier["dimensions"]) == 6
+
+    # 2. HTML Dossier
+    resp_html = client.get("/analytics/supervisory-risk/entities/CSE-011/dossier/html")
+    assert resp_html.status_code == 200
+    assert "text/html" in resp_html.headers.get("content-type", "")
+    assert "National Supervisory SOC Assessment Dossier" in resp_html.text
+    assert "CSE-011" in resp_html.text
+

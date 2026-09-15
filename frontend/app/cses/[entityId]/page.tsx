@@ -11,6 +11,8 @@ import {
   Layers,
   FileText,
   ExternalLink,
+  Printer,
+  Download,
 } from "lucide-react";
 import { api } from "../../../src/api";
 import { EntityRisk, RiskContribution, parseFindingIds } from "../../../src/types";
@@ -79,6 +81,34 @@ export default function CSEDetailPage() {
 
   // Progressive disclosure state for contributions
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const [downloadingJson, setDownloadingJson] = useState(false);
+
+  const handleDownloadJson = async () => {
+    try {
+      setDownloadingJson(true);
+      const dossier = await api.getEntityDossier(entityId);
+      const blob = new Blob([JSON.stringify(dossier, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `supervisory_dossier_${entityId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download dossier JSON:", err);
+      alert("Failed to download supervisory dossier JSON.");
+    } finally {
+      setDownloadingJson(false);
+    }
+  };
+
+  const handlePrintPdf = () => {
+    window.open(api.getDossierHtmlUrl(entityId), "_blank");
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -142,23 +172,46 @@ export default function CSEDetailPage() {
 
   return (
     <div className="space-y-8">
-      {/* Back Navigation & Breadcrumb */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/cses"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>CSE Assessments</span>
-        </Link>
+      {/* Back Navigation, Breadcrumb & Export Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/cses"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>CSE Assessments</span>
+          </Link>
 
-        <Link
-          href="/review-queue"
-          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
-        >
-          <span>Review Queue</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+          <Link
+            href="/review-queue"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
+          >
+            <span>Review Queue</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Supervisory Dossier Export Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrintPdf}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm cursor-pointer"
+            title="Open printable examination dossier (Save as PDF)"
+          >
+            <Printer className="w-3.5 h-3.5 text-sky-500" />
+            <span>Print / PDF Dossier</span>
+          </button>
+          <button
+            onClick={handleDownloadJson}
+            disabled={downloadingJson}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm disabled:opacity-50 cursor-pointer"
+            title="Download full JSON audit dossier"
+          >
+            <Download className="w-3.5 h-3.5 text-[var(--muted)]" />
+            <span>{downloadingJson ? "Exporting..." : "Audit JSON"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Editorial Identity & Risk Hero */}

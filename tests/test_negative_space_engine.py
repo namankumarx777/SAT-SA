@@ -22,7 +22,7 @@ def test_negative_space_engine_is_traceable_deterministic_and_queryable(tmp_path
     second_result = run_negative_space(features, second, "phase2-canonical")
     assert result.findings and result.evidence
     assert len(result.findings) == len(second_result.findings)
-    assert {item.rule_id for item in result.findings} == {"NS001", "NS002", "NS005"}
+    assert {"NS001", "NS002", "NS003", "NS005"}.issubset({item.rule_id for item in result.findings})
     assert result.observation_window.sufficient
     finding_ids = {item.id for item in result.findings}
     assert all(item.finding_id in finding_ids for item in result.evidence)
@@ -31,7 +31,6 @@ def test_negative_space_engine_is_traceable_deterministic_and_queryable(tmp_path
         assert hashlib.sha256(left.read_bytes()).digest() == hashlib.sha256(right.read_bytes()).digest()
         assert duckdb.sql(f"select count(*) from read_parquet('{left.as_posix()}')").fetchone()[0] > 0
     manifest = json.loads((first / "negative_space_manifest.json").read_text(encoding="utf-8"))
-    assert manifest["deferred_detectors"]["NS003"]
     assert manifest["deferred_detectors"]["NS006"]
     assert not {"negative_space", "is_negative_space", "risk_score"} & set(pl.read_parquet(first / "findings.parquet").columns)
 

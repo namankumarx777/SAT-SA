@@ -6,7 +6,7 @@ import polars as pl
 
 from app.analytics.negative_space.baselines import observation_window
 from app.analytics.negative_space.definitions import DETECTORS
-from app.analytics.negative_space.evaluators import evaluate_ns001, evaluate_ns002, evaluate_ns004, evaluate_ns005
+from app.analytics.negative_space.evaluators import evaluate_ns001, evaluate_ns002, evaluate_ns003, evaluate_ns004, evaluate_ns005
 
 
 def window() -> object:
@@ -49,3 +49,18 @@ def test_ns005_only_uses_critical_alerts_without_cases() -> None:
 def test_missing_observation_window_suppresses_time_dependent_findings() -> None:
     empty = pl.DataFrame({"timestamp": pl.Series([], dtype=pl.Datetime)})
     assert not evaluate_ns001(DETECTORS["NS001"], {"asset_features": pl.DataFrame(), "entity_features": pl.DataFrame()}, observation_window({"alert_features": empty}))[0]
+
+
+def test_ns003_detects_missing_cohort_telemetry_category() -> None:
+    # E1 has EDR, Firewall, IAM; E2 has EDR, Firewall, IAM; E3 has EDR, Firewall (missing IAM)
+    alerts_e1 = [{"entity_id": "E1", "source": s, "timestamp": datetime(2025, 1, 1)} for s in ["EDR", "Firewall", "IAM"] * 10]
+    alerts_e2 = [{"entity_id": "E2", "source": s, "timestamp": datetime(2025, 1, 1)} for s in ["EDR", "Firewall", "IAM"] * 10]
+    alerts_e3 = [{"entity_id": "E3", "source": s, "timestamp": datetime(2025, 1, 1)} for s in ["EDR", "Firewall"] * 15]
+    alerts = pl.DataFrame(alerts_e1 + alerts_e2 + alerts_e3)
+
+    findings, evidence = evaluate_ns003(DETECTORS["NS003"], {"alert_features": alerts}, window())
+    assert len(findings) == 1
+    assert findings[0].entity_id == "E3"
+    assert "IAM" in findings[0].summary
+    assert findings[0].finding_type == "Alert Source Coverage"
+    assert evidence
