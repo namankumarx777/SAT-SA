@@ -1,0 +1,50 @@
+{
+  "name": "SENTRA-network-org1",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Org1",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "SENTRA-channel": {
+      "orderers": [
+        "orderer.supervisor.SENTRA"
+      ],
+      "peers": {
+        "peer0.csea.SENTRA": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    }
+  },
+  "organizations": {
+    "Org1": {
+      "mspid": "Org1MSP",
+      "peers": [
+        "peer0.csea.SENTRA"
+      ]
+    }
+  },
+  "orderers": {
+    "orderer.supervisor.SENTRA": {
+      "url": "grpc://localhost:7050"
+    }
+  },
+  "peers": {
+    "peer0.csea.SENTRA": {
+      "url": "grpc://localhost:7051"
+    },
+    "peer0.cseb.SENTRA": {
+      "url": "grpc://localhost:9051"
+    }
+  }
+}

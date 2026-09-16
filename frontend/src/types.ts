@@ -2,6 +2,56 @@ export type RiskBand = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
 export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW";
 export type RecordType = "ENTITY" | "FINDING" | "CASE" | "ALERT" | "ASSET";
 
+export type IntegrityState = "VERIFIED" | "MISMATCH" | "NOT_REGISTERED" | "UNAVAILABLE";
+
+export interface BlockchainStatus {
+  status: string;
+  network: string;
+  channel: string;
+  chaincode: string;
+  chaincode_version: string;
+  peer_endpoint: string;
+  is_connected: boolean;
+  total_records: number;
+  mode: string;
+}
+
+export interface VerificationResult {
+  recordId: string;
+  status: IntegrityState;
+  localHash: string;
+  ledgerHash?: string | null;
+  recordType?: string | null;
+  entityId?: string | null;
+  txId?: string | null;
+  version?: number | null;
+  timestamp?: string | null;
+  message: string;
+}
+
+export interface LedgerRecord {
+  recordId: string;
+  recordType: string;
+  entityId: string;
+  contentHash?: string | null;
+  findingHash?: string | null;
+  manifestHash?: string | null;
+  findingId?: string | null;
+  sourcePhase?: string | null;
+  detectorId?: string | null;
+  period?: string | null;
+  createdAt: string;
+  registeredBy: string;
+  version: number;
+}
+
+export interface LedgerHistoryEntry {
+  txId: string;
+  timestamp: string;
+  isDelete: boolean;
+  record?: LedgerRecord | null;
+}
+
 export interface EntityRisk {
   entity_id: string;
   name?: string;

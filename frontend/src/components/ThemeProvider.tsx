@@ -13,7 +13,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   theme: "system",
   resolvedTheme: "dark",
-  setTheme: () => {},
+  setTheme: () => { },
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -23,7 +23,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("sat-sa-theme") as ThemeMode | null;
+    const saved = localStorage.getItem("SENTRA-theme") as ThemeMode | null;
     if (saved && (saved === "light" || saved === "dark" || saved === "system")) {
       setThemeState(saved);
     }
@@ -68,7 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
-    localStorage.setItem("sat-sa-theme", newTheme);
+    localStorage.setItem("SENTRA-theme", newTheme);
   };
 
   return (

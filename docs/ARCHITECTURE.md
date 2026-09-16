@@ -1,6 +1,6 @@
-# SAT-SA Architecture Specification
+# SENTRA Architecture Specification
 
-**SAT-SA** (Supervisory Analytics Tool for SOC Assessment) is an offline-capable supervisory analytics platform designed to evaluate periodic submissions of alerts, cases, assets, and escalations from Critical Sector Entities (CSEs).
+**SENTRA** (Supervisory Analytics Tool for SOC Assessment) is an offline-capable supervisory analytics platform designed to evaluate periodic submissions of alerts, cases, assets, and escalations from Critical Sector Entities (CSEs).
 
 ---
 
@@ -63,7 +63,7 @@
 
 ## 2. Six Operational Supervisory Dimensions
 
-SAT-SA evaluates entities across 6 weighted operational dimensions:
+SENTRA evaluates entities across 6 weighted operational dimensions:
 
 1. **Escalation (25%)**: Prevalence of unescalated critical cases (`R002`), critical escalation execution gaps (`EG001`), and peer deviations (`PB001`).
 2. **Investigation (20%)**: Investigation duration gaps (`EG002`), rapid closure prevalence (`R001`, `EG004`), and uninvestigated alerts (`NS005`).
@@ -77,7 +77,7 @@ SAT-SA evaluates entities across 6 weighted operational dimensions:
 ## 3. Core Supervisory Principles
 
 1. **Anti-Double-Counting Correlation**:
-   When multiple detectors (`R002`, `EG001`, `PB001`, `AN001`) flag the same underlying operational weakness, SAT-SA consolidates them into **one** correlation group (`CRITICAL_ESCALATION`) with a bounded corroboration boost (+12% for 2 phases, +24% for 3+ phases), preventing artificial score explosion.
+   When multiple detectors (`R002`, `EG001`, `PB001`, `AN001`) flag the same underlying operational weakness, SENTRA consolidates them into **one** correlation group (`CRITICAL_ESCALATION`) with a bounded corroboration boost (+12% for 2 phases, +24% for 3+ phases), preventing artificial score explosion.
 
 2. **Feature-Aware Dimension Isolation**:
    Multivariate anomaly detector `AN001` participates in a dimension *only* when its `contributing_deviations` explicitly contain a feature relevant to that dimension.

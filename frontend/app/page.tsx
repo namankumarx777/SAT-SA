@@ -118,66 +118,80 @@ export default function OverviewPage() {
         </Link>
       </div>
 
-      {/* Restrained KPI Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+      {/* KPI Metric Cards in Rounded Containers */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+        {/* 1. Assessed CSEs */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-2 hover:border-[var(--muted)]/40 transition-colors">
           <span className="text-[11px] font-mono text-[var(--muted)] uppercase tracking-wider block">
             Assessed CSEs
           </span>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--fg)]">
             {totalEntities}
           </div>
-          <span className="text-[10px] text-[var(--subtle)] block">Monitored entities</span>
+          <span className="text-[11px] text-[var(--subtle)] block">
+            Monitored entities
+          </span>
         </div>
 
-        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
-          <span className="text-[11px] font-mono text-[var(--risk-high-text)] uppercase tracking-wider block">
-            High Risk
-          </span>
+        {/* 2. High Risk */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-2 hover:border-[var(--muted)]/40 transition-colors">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--risk-high-dot)]" />
+            <span className="text-[11px] font-mono text-[var(--risk-high-text)] uppercase tracking-wider block">
+              High Risk
+            </span>
+          </div>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--risk-high-text)]">
             {highRiskEntities}
           </div>
-          <span className="text-[10px] text-[var(--muted)] block">
+          <span className="text-[11px] text-[var(--muted)] block">
             {bandThresholds ? bandRangeLabel("HIGH", bandThresholds) : "Score 50.0–74.9"}
           </span>
         </div>
 
-        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+        {/* 3. Critical */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-2 hover:border-[var(--muted)]/40 transition-colors">
           <span className="text-[11px] font-mono text-[var(--muted)] uppercase tracking-wider block">
             Critical
           </span>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--fg)]">
             {criticalEntities}
           </div>
-          <span className="text-[10px] text-[var(--subtle)] block">
+          <span className="text-[11px] text-[var(--subtle)] block">
             {bandThresholds ? bandRangeLabel("CRITICAL", bandThresholds) : "Score \u2265 75.0"}
           </span>
         </div>
 
-        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+        {/* 4. Review Items */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-2 hover:border-[var(--muted)]/40 transition-colors">
           <span className="text-[11px] font-mono text-[var(--muted)] uppercase tracking-wider block">
             Review Items
           </span>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--fg)]">
             {queue.length}
           </div>
-          <span className="text-[10px] text-[var(--subtle)] block">Prioritized inspection queue</span>
+          <span className="text-[11px] text-[var(--subtle)] block">
+            Prioritized inspection queue
+          </span>
         </div>
 
-        <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-1">
+        {/* 5. Coverage */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-2 hover:border-[var(--muted)]/40 transition-colors col-span-2 sm:col-span-1">
           <span className="text-[11px] font-mono text-[var(--muted)] uppercase tracking-wider block">
             Coverage
           </span>
           <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums text-[var(--fg)]">
             {avgCoverage}%
           </div>
-          <span className="text-[10px] text-[var(--subtle)] block">Dimensional completeness</span>
+          <span className="text-[11px] text-[var(--subtle)] block">
+            Dimensional completeness
+          </span>
         </div>
       </div>
 
       {/* Minimal Horizontal Risk Distribution */}
-      <div className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-        <div className="flex items-center justify-between text-xs">
+      <div className="py-4 space-y-4">
+        <div className="flex items-center justify-between text-xs border-b border-[var(--border-subtle)] pb-2">
           <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--muted)]">
             Risk Distribution
           </span>
@@ -186,32 +200,32 @@ export default function OverviewPage() {
           </span>
         </div>
 
-        {/* Clean segment bar */}
-        <div className="w-full h-2 rounded-full bg-[var(--surface-secondary)] overflow-hidden flex">
+        {/* Clean segment bar with animated width */}
+        <div className="w-full h-1.5 rounded-full bg-[var(--border-subtle)] overflow-hidden flex">
           <div
             style={{ width: `${(lowEntities / totalEntities) * 100}%` }}
-            className="bg-[var(--risk-low-dot)] transition-all"
+            className="bg-[var(--risk-low-dot)] transition-all duration-700 ease-out"
             title={`LOW: ${lowEntities}`}
           />
           <div
             style={{ width: `${(moderateEntities / totalEntities) * 100}%` }}
-            className="bg-[var(--risk-moderate-dot)] transition-all"
+            className="bg-[var(--risk-moderate-dot)] transition-all duration-700 ease-out delay-75"
             title={`MODERATE: ${moderateEntities}`}
           />
           <div
             style={{ width: `${(highRiskEntities / totalEntities) * 100}%` }}
-            className="bg-[var(--risk-high-dot)] transition-all"
+            className="bg-[var(--risk-high-dot)] transition-all duration-700 ease-out delay-150"
             title={`HIGH: ${highRiskEntities}`}
           />
           <div
             style={{ width: `${(criticalEntities / totalEntities) * 100}%` }}
-            className="bg-[var(--risk-critical-dot)] transition-all"
+            className="bg-[var(--risk-critical-dot)] transition-all duration-700 ease-out delay-200"
             title={`CRITICAL: ${criticalEntities}`}
           />
         </div>
 
         {/* Understated Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs font-mono pt-1 text-[var(--muted)]">
+        <div className="flex flex-wrap items-center gap-6 text-[11px] font-mono pt-1 text-[var(--muted)]">
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--risk-low-dot)]" />
             <span>LOW</span>
@@ -247,29 +261,34 @@ export default function OverviewPage() {
             </p>
           </div>
 
-          {/* Compact Search & Filters */}
+          {/* Unified Search & Filters */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3 h-3 absolute left-2.5 top-2.5 text-[var(--muted)]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
               <input
                 type="text"
-                placeholder="Filter entity..."
+                placeholder="Search entity..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-44"
+                className="pl-8 pr-2.5 h-[34px] text-xs rounded-lg border border-[var(--border)] bg-transparent text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64 transition-colors"
               />
             </div>
 
-            <Select
-              value={selectedBand}
-              onChange={(val) => setSelectedBand(val)}
-              options={[
-                { value: "ALL", label: "All Bands" },
-                { value: "HIGH", label: "High" },
-                { value: "MODERATE", label: "Moderate" },
-                { value: "LOW", label: "Low" },
-              ]}
-            />
+            <div className="flex items-center h-[34px] rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
+              {["ALL", "HIGH", "MODERATE", "LOW"].map((band) => (
+                <button
+                  key={band}
+                  onClick={() => setSelectedBand(band)}
+                  className={`px-2.5 h-full rounded-md text-[11px] font-medium transition cursor-pointer ${
+                    selectedBand === band
+                      ? "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border-subtle)] shadow-xs"
+                      : "text-[var(--muted)] hover-subtle"
+                  }`}
+                >
+                  {band}
+                </button>
+              ))}
+            </div>
 
             {uniqueSectors.length > 0 && (
               <Select
@@ -296,10 +315,10 @@ export default function OverviewPage() {
             }}
           />
         ) : (
-          <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--surface)]">
+          <div className="border border-[var(--border)] rounded overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[var(--surface-secondary)] text-[var(--muted)] font-medium border-b border-[var(--border)]">
+                <thead className="bg-[var(--surface-secondary)] text-[var(--muted)] font-medium border-b border-[var(--border-subtle)]">
                   <tr>
                     <th className="px-4 py-2.5 font-mono text-[10px] uppercase">Entity</th>
                     <th className="px-4 py-2.5 font-mono text-[10px] uppercase">Sector</th>
@@ -315,7 +334,7 @@ export default function OverviewPage() {
                     <tr
                       key={e.entity_id}
                       onClick={() => router.push(`/cses/${e.entity_id}`)}
-                      className="hover:bg-[var(--surface-secondary)] transition cursor-pointer group"
+                      className="hover-subtle cursor-pointer group"
                     >
                       <td className="px-4 py-3">
                         <div className="font-mono font-semibold text-[var(--fg)] group-hover:text-[var(--fg)]">

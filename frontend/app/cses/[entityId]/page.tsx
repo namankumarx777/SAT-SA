@@ -50,6 +50,10 @@ export default function CSEDetailPage() {
 
   // Progressive disclosure state for contributions
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+
+  // Cross-highlighting state
+  const [selectedDimension, setSelectedDimension] = useState<string | null>(null);
+
   const [downloadingJson, setDownloadingJson] = useState(false);
 
   const handleDownloadJson = async () => {
@@ -139,10 +143,10 @@ export default function CSEDetailPage() {
   const topContribution =
     (groupKey
       ? contributions.find(
-          (c) =>
-            c.corroboration_group === groupKey &&
-            c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()),
-        )
+        (c) =>
+          c.corroboration_group === groupKey &&
+          c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()),
+      )
       : undefined) ||
     contributions.find((c) =>
       c.dimension.toLowerCase().includes(entity.top_risk_dimension.toLowerCase()),
@@ -221,12 +225,17 @@ export default function CSEDetailPage() {
               <span>{entity.sector || "Energy & Utilities"}</span>
               <span>•</span>
               <span>{entity.criticality || "MEDIUM"} Criticality</span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Ledger Tracked
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--fg)]">
               {entity.name || entity.entity_id}
             </h1>
             <p className="text-xs text-[var(--muted)] pt-1">
-              Assessment Coverage: {(entity.assessment_coverage * 100).toFixed(0)}% ({entity.assessable_dimensions}/{entity.total_dimensions} Dimensions Assessable)
+              Assessment Coverage: {(entity.assessment_coverage * 100).toFixed(0)}% ({entity.assessable_dimensions}/{entity.total_dimensions} Dimensions Assessable) • Cryptographic Commitment: SHA-256 Provenance
             </p>
           </div>
 
@@ -295,7 +304,7 @@ export default function CSEDetailPage() {
             </div>
 
             <p className="text-xs text-[var(--muted)] leading-relaxed">
-              Multiple analytical detectors observe the same underlying operational deficiency. SAT-SA consolidates them within the <strong>{corroborationGroupId}</strong> correlation group instead of penalizing the entity with additive double-counting.
+              Multiple analytical detectors observe the same underlying operational deficiency. SENTRA consolidates them within the <strong>{corroborationGroupId}</strong> correlation group instead of penalizing the entity with additive double-counting.
               {corroborationDescription && (
                 <span className="block mt-1 text-[var(--subtle)]">{corroborationDescription}</span>
               )}
@@ -368,6 +377,8 @@ export default function CSEDetailPage() {
               weight={dim.weight}
               description={dim.description}
               thresholds={thresholds}
+              isSelected={selectedDimension === dim.key}
+              onClick={() => setSelectedDimension(selectedDimension === dim.key ? null : dim.key)}
             />
           ))}
         </div>
@@ -417,7 +428,13 @@ export default function CSEDetailPage() {
                     <React.Fragment key={c.id}>
                       <tr
                         onClick={() => setExpandedRowId(isExpanded ? null : c.id)}
-                        className="hover:bg-[var(--surface-secondary)] transition cursor-pointer"
+                        className={`transition-all cursor-pointer ${selectedDimension && selectedDimension !== c.dimension
+                            ? "opacity-30 hover:opacity-100 bg-[var(--bg)]"
+                            : "hover-subtle"
+                          } ${selectedDimension === c.dimension
+                            ? "bg-[var(--surface-secondary)] border-l-2 border-l-[var(--fg)]"
+                            : ""
+                          }`}
                       >
                         <td className="px-4 py-3 font-medium text-[var(--fg)]">
                           {c.dimension}

@@ -107,15 +107,19 @@ def write_outputs(
     output_dir: str | Path,
     dataset_id: str,
 ) -> None:
-    """Write Parquet datasets and auditable JSON manifest deterministically."""
+    """Write Parquet datasets and auditable JSON manifest deterministically and atomically."""
+    import tempfile
     destination = Path(output_dir)
-    destination.mkdir(parents=True, exist_ok=True)
+    destination.parent.mkdir(parents=True, exist_ok=True)
 
-    canonical_frame(result.entity_risks).write_parquet(destination / "entity_risk.parquet")
-    canonical_frame(result.risk_contributions).write_parquet(destination / "risk_contributions.parquet")
-    canonical_frame(result.review_queue).write_parquet(destination / "review_queue.parquet")
-
-    write_manifest(destination, dataset_id, bundle, result)
+    with tempfile.TemporaryDirectory(dir=destination.parent, prefix=".tmp-risk-") as temporary:
+        temp_path = Path(temporary)
+        canonical_frame(result.entity_risks).write_parquet(temp_path / "entity_risk.parquet")
+        canonical_frame(result.risk_contributions).write_parquet(temp_path / "risk_contributions.parquet")
+        canonical_frame(result.review_queue).write_parquet(temp_path / "review_queue.parquet")
+        write_manifest(temp_path, dataset_id, bundle, result)
+        
+        temp_path.replace(destination)
 
 
 def run_supervisory_risk(
@@ -144,7 +148,7 @@ def run_supervisory_risk(
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run SAT-SA Phase 9 Supervisory Risk Engine & Manual Review Prioritisation."
+        description="Run SENTRA Phase 9 Supervisory Risk Engine & Manual Review Prioritisation."
     )
     parser.add_argument("--input", required=True, type=Path, help="Path to processed data root directory")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Output destination directory")
@@ -155,7 +159,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _parse_args()
     result = run_supervisory_risk(args.input, args.output, args.dataset_id)
-    print("SAT-SA Supervisory Risk Engine & Manual Review Prioritisation Complete")
+    print("SENTRA Supervisory Risk Engine & Manual Review Prioritisation Complete")
     print(f"Entities evaluated: {len(result.entities_evaluated)}")
     print(f"Risk bands: {dict(Counter(r.risk_band for r in result.entity_risks))}")
     print(f"Risk contributions: {len(result.risk_contributions)}")

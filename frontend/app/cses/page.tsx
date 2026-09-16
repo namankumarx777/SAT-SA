@@ -160,32 +160,7 @@ export default function CSEListPage() {
     );
   };
 
-  const highBandCount = useMemo(
-    () =>
-      entities.filter(
-        (e) =>
-          (e.risk_band || "").toUpperCase() === "HIGH" ||
-          (e.risk_band || "").toUpperCase() === "CRITICAL",
-      ).length,
-    [entities],
-  );
 
-  const moderateBandCount = useMemo(
-    () =>
-      entities.filter(
-        (e) =>
-          (e.risk_band || "").toUpperCase() === "MODERATE" ||
-          (e.risk_band || "").toUpperCase() === "MEDIUM",
-      ).length,
-    [entities],
-  );
-
-  const lowBandCount = useMemo(
-    () =>
-      entities.filter((e) => (e.risk_band || "").toUpperCase() === "LOW")
-        .length,
-    [entities],
-  );
 
   if (loading) {
     return <LoadingSkeleton variant="table" text="Loading CSE registry..." />;
@@ -207,47 +182,33 @@ export default function CSEListPage() {
             Standardized evaluation registry across all 12 monitored entities
           </p>
         </div>
-
-        <div className="flex items-center gap-2 font-mono text-xs select-none">
-          <span className="text-[var(--risk-high-text)] font-semibold">
-            {highBandCount} High
-          </span>
-          <span className="text-[var(--subtle)]">•</span>
-          <span className="text-[var(--risk-moderate-text)] font-semibold">
-            {moderateBandCount} Moderate
-          </span>
-          <span className="text-[var(--subtle)]">•</span>
-          <span className="text-[var(--risk-low-text)] font-semibold">
-            {lowBandCount} Low
-          </span>
-        </div>
       </div>
 
-      {/* Floating Filter / Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xs">
+      {/* Filter / Search Bar in Rounded Container */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <div className="flex flex-wrap items-center gap-2">
           {/* Integrated Search */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[var(--muted)]" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
             <input
               type="text"
               placeholder="Search by ID, name, sector..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-7 pr-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64"
+              className="pl-8 pr-2.5 h-[34px] text-xs rounded-lg border border-[var(--border)] bg-transparent text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64 transition-colors"
             />
           </div>
 
           {/* Segmented Band Filters */}
-          <div className="flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
+          <div className="flex items-center h-[34px] rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
             {["ALL", "HIGH", "MODERATE", "LOW"].map((band) => (
               <button
                 key={band}
                 onClick={() => setSelectedBand(band)}
-                className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
+                className={`px-2.5 h-full rounded-md text-[11px] font-medium transition cursor-pointer ${
                   selectedBand === band
-                    ? "bg-[var(--surface)] text-[var(--fg)] shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--fg)]"
+                    ? "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border-subtle)] shadow-xs"
+                    : "text-[var(--muted)] hover-subtle"
                 }`}
               >
                 {band}
@@ -279,9 +240,9 @@ export default function CSEListPage() {
         </div>
 
         {/* Metadata count */}
-        <span className="text-xs font-mono text-[var(--muted)] pr-1 select-none">
+        <div className="text-[11px] font-mono text-[var(--muted)] pr-1 select-none">
           {filteredAndSortedEntities.length} of {entities.length} entities
-        </span>
+        </div>
       </div>
 
       {/* Table Section */}

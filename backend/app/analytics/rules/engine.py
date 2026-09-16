@@ -44,21 +44,27 @@ def evaluate_all_rules(feature_bundle: dict[str, pl.DataFrame]) -> RuleRunResult
 
 
 def write_rule_outputs(result: RuleRunResult, output_dir: str | Path, dataset_id: str) -> dict[str, object]:
-    """Write deterministic findings/evidence Parquet and a rule manifest."""
+    """Write deterministic findings/evidence Parquet and a rule manifest atomically."""
+    import tempfile
     destination = Path(output_dir)
-    destination.mkdir(parents=True, exist_ok=True)
-    findings_frame(result.findings).write_parquet(destination / "findings.parquet")
-    evidence_frame(result.evidence).write_parquet(destination / "evidence.parquet")
-    manifest = {
-        "schema_version": "1.0",
-        "dataset_id": dataset_id,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "rules": [rule.model_dump() for rule in enabled_rules()],
-        "rules_evaluated": result.rules_evaluated,
-        "thresholds": {rule.rule_id: rule.thresholds for rule in enabled_rules()},
-        "row_counts": {"findings": len(result.findings), "evidence": len(result.evidence)},
-    }
-    (destination / "rule_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    
+    with tempfile.TemporaryDirectory(dir=destination.parent, prefix=".tmp-rules-") as temporary:
+        temp_path = Path(temporary)
+        findings_frame(result.findings).write_parquet(temp_path / "findings.parquet")
+        evidence_frame(result.evidence).write_parquet(temp_path / "evidence.parquet")
+        manifest = {
+            "schema_version": "1.0",
+            "dataset_id": dataset_id,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "rules": [rule.model_dump() for rule in enabled_rules()],
+            "rules_evaluated": result.rules_evaluated,
+            "thresholds": {rule.rule_id: rule.thresholds for rule in enabled_rules()},
+            "row_counts": {"findings": len(result.findings), "evidence": len(result.evidence)},
+        }
+        (temp_path / "rule_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        temp_path.replace(destination)
+        
     return manifest
 
 
@@ -71,7 +77,7 @@ def run_rules(input_dir: str | Path, output_dir: str | Path = DEFAULT_OUTPUT, da
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run SAT-SA deterministic supervisory rules.")
+    parser = argparse.ArgumentParser(description="Run SENTRA deterministic supervisory rules.")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--dataset-id")

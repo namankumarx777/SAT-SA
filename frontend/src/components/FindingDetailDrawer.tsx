@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Layers, Database, ArrowRight } from "lucide-react";
 import { api } from "../api";
-import { FindingDetailResponse } from "../types";
+import { FindingDetailResponse, VerificationResult } from "../types";
 import { DetectorTypeBadge, EvidenceStrengthBadge, PriorityBadge } from "./Badges";
 
 interface FindingDetailDrawerProps {
@@ -18,10 +18,13 @@ export function FindingDetailDrawer({
   const [data, setData] = useState<FindingDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [integrityResult, setIntegrityResult] = useState<VerificationResult | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (!findingId) {
       setData(null);
+      setIntegrityResult(null);
       return;
     }
 
@@ -61,19 +64,19 @@ export function FindingDetailDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end transition-opacity duration-200"
+      className="fixed inset-0 z-50 overflow-hidden bg-black/20 backdrop-blur-sm flex justify-end animate-in fade-in duration-300"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
       aria-modal="true"
       role="dialog"
     >
-      <div className="w-full max-w-2xl bg-[var(--surface)] border-l border-[var(--border)] h-full flex flex-col shadow-2xl transition-transform duration-250 ease-out">
+      <div className="w-full max-w-2xl bg-[var(--surface)] border-l border-[var(--border)] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 ease-out">
         {/* Drawer Header */}
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-semibold text-[var(--muted)]">
+              <span className="font-mono text-[11px] font-semibold text-[var(--muted)]">
                 {findingId}
               </span>
               {data?.finding && (
@@ -87,25 +90,25 @@ export function FindingDetailDrawer({
           <button
             onClick={onClose}
             aria-label="Close inspector"
-            className="p-1.5 rounded-md text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-secondary)] transition"
+            className="p-1.5 rounded-md text-[var(--muted)] hover-subtle"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Drawer Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-sm">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 text-sm">
           {loading && (
             <div className="py-12 space-y-3 text-center">
-              <div className="w-6 h-6 border-2 border-[var(--fg)] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-[var(--muted)] font-mono">
+              <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--fg)] rounded-full animate-spin mx-auto" />
+              <p className="text-[11px] text-[var(--muted)] font-mono">
                 Resolving evidence chain...
               </p>
             </div>
           )}
 
           {error && (
-            <div className="p-4 rounded-lg border border-[var(--risk-critical-border)] bg-[var(--risk-critical-bg)] text-xs text-[var(--risk-critical-text)]">
+            <div className="text-xs text-[var(--risk-critical-text)] font-mono">
               <span className="font-semibold block">Error loading finding detail</span>
               <span>{error}</span>
             </div>
@@ -113,10 +116,10 @@ export function FindingDetailDrawer({
 
           {data && !loading && (
             <>
-              {/* Finding Metadata Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
-                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block">
+              {/* Minimal Finding Metadata Row */}
+              <div className="flex flex-wrap items-center gap-8 border-b border-[var(--border-subtle)] pb-4">
+                <div>
+                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block tracking-wider">
                     Source Phase
                   </span>
                   <span className="font-semibold text-xs text-[var(--fg)] mt-0.5 block uppercase">
@@ -124,8 +127,8 @@ export function FindingDetailDrawer({
                   </span>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
-                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block">
+                <div>
+                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block tracking-wider">
                     Severity
                   </span>
                   <span className="font-semibold text-xs text-[var(--fg)] mt-0.5 block">
@@ -133,8 +136,8 @@ export function FindingDetailDrawer({
                   </span>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
-                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block">
+                <div>
+                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block tracking-wider">
                     Evidence Strength
                   </span>
                   <div className="mt-0.5">
@@ -142,8 +145,8 @@ export function FindingDetailDrawer({
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)]">
-                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block">
+                <div>
+                  <span className="text-[10px] uppercase font-mono text-[var(--muted)] block tracking-wider">
                     Entity ID
                   </span>
                   <span className="font-mono text-xs font-semibold text-[var(--fg)] mt-0.5 block">
@@ -157,47 +160,47 @@ export function FindingDetailDrawer({
                 data.finding.expected_value !== undefined ||
                 data.finding.gap_value !== undefined ||
                 data.finding.anomaly_score !== undefined) && (
-                <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface-secondary)] space-y-3">
+                <div className="space-y-4">
                   <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
                     Quantitative Deviation
                   </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                     {data.finding.observed_value !== undefined && (
-                      <div>
-                        <span className="text-[10px] text-[var(--muted)] block">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] block uppercase tracking-wider">
                           Observed
                         </span>
-                        <span className="font-mono text-base font-bold text-[var(--fg)] tabular-nums">
+                        <span className="font-mono text-xl font-bold text-[var(--fg)] tabular-nums">
                           {String(data.finding.observed_value)}
                         </span>
                       </div>
                     )}
                     {data.finding.expected_value !== undefined && (
-                      <div>
-                        <span className="text-[10px] text-[var(--muted)] block">
-                          Expected / Baseline
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] block uppercase tracking-wider">
+                          Expected
                         </span>
-                        <span className="font-mono text-base font-bold text-[var(--fg)] tabular-nums">
+                        <span className="font-mono text-xl font-bold text-[var(--fg)] tabular-nums">
                           {String(data.finding.expected_value)}
                         </span>
                       </div>
                     )}
                     {data.finding.gap_value !== undefined && (
-                      <div>
-                        <span className="text-[10px] text-[var(--muted)] block">
-                          Execution Gap
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] block uppercase tracking-wider">
+                          Gap
                         </span>
-                        <span className="font-mono text-base font-bold text-[var(--risk-high-text)] tabular-nums">
+                        <span className="font-mono text-xl font-bold text-[var(--risk-high-text)] tabular-nums">
                           {String(data.finding.gap_value)}
                         </span>
                       </div>
                     )}
                     {data.finding.anomaly_rank !== undefined && (
-                      <div>
-                        <span className="text-[10px] text-[var(--muted)] block">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[var(--muted)] block uppercase tracking-wider">
                           Anomaly Rank
                         </span>
-                        <span className="font-mono text-base font-bold text-[var(--fg)] tabular-nums">
+                        <span className="font-mono text-xl font-bold text-[var(--fg)] tabular-nums">
                           #{data.finding.anomaly_rank}
                         </span>
                       </div>
@@ -207,22 +210,22 @@ export function FindingDetailDrawer({
               )}
 
               {/* Summary & Rationale */}
-              <div className="space-y-2">
+              <div className="space-y-2 border-t border-[var(--border-subtle)] pt-6">
                 <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
                   Why This Matters
                 </span>
-                <p className="text-[var(--fg)] text-xs leading-relaxed font-normal">
+                <p className="text-[var(--fg)] text-[13px] leading-relaxed">
                   {data.finding.summary}
                 </p>
                 {data.finding.rationale && (
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed pt-2 border-t border-[var(--border-subtle)]">
+                  <p className="text-xs text-[var(--muted)] leading-relaxed pt-2">
                     {data.finding.rationale}
                   </p>
                 )}
               </div>
 
               {/* Supporting Evidence Chain */}
-              <div className="space-y-2.5">
+              <div className="space-y-4 border-t border-[var(--border-subtle)] pt-6">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider">
                     Supporting Evidence ({data.evidence.length})
@@ -233,11 +236,11 @@ export function FindingDetailDrawer({
                 </div>
 
                 {data.evidence.length === 0 ? (
-                  <div className="p-4 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-center text-xs text-[var(--muted)]">
+                  <div className="text-xs text-[var(--muted)] italic">
                     No granular evidence records attached to this cohort-level finding.
                   </div>
                 ) : (
-                  <div className="border border-[var(--border)] rounded-lg overflow-hidden">
+                  <div className="border border-[var(--border)] rounded-md overflow-hidden bg-[var(--surface)]">
                     <div className="overflow-x-auto max-h-72">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-[var(--surface-secondary)] text-[var(--muted)] font-medium sticky top-0 border-b border-[var(--border)]">
@@ -251,7 +254,7 @@ export function FindingDetailDrawer({
                         </thead>
                         <tbody className="divide-y divide-[var(--border-subtle)]">
                           {data.evidence.map((ev, i) => (
-                            <tr key={ev.id || i} className="hover:bg-[var(--surface-secondary)] transition">
+                            <tr key={ev.id || i} className="hover-subtle">
                               <td className="px-3 py-2 font-mono text-[11px] text-[var(--muted)]">
                                 {ev.source_type}
                               </td>
@@ -272,6 +275,99 @@ export function FindingDetailDrawer({
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Evidence Provenance & Hyperledger Fabric Integrity */}
+              <div className="space-y-4 border-t border-[var(--border-subtle)] pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
+                      Evidence Integrity
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!findingId) return;
+                      setVerifying(true);
+                      try {
+                        const res = await api.verifyRecord(findingId);
+                        setIntegrityResult(res);
+                      } catch (err: any) {
+                        setIntegrityResult({
+                          recordId: findingId,
+                          status: "UNAVAILABLE",
+                          localHash: "",
+                          message: err.message || "Failed contacting Fabric ledger",
+                        });
+                      } finally {
+                        setVerifying(false);
+                      }
+                    }}
+                    disabled={verifying}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover-subtle text-[var(--fg)] flex items-center gap-1.5 cursor-pointer disabled:opacity-50 press-effect"
+                  >
+                    {verifying ? (
+                      <>
+                        <div className="w-3 h-3 border-2 border-[var(--border)] border-t-[var(--fg)] rounded-full animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify Integrity"
+                    )}
+                  </button>
+                </div>
+
+                {integrityResult && (
+                  <div className="space-y-3 pt-2 text-[11px] font-mono text-[var(--muted)]">
+                    <div className="flex items-center gap-3">
+                      <span>Ledger Verified</span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded ${
+                          integrityResult.status === "VERIFIED"
+                            ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                            : integrityResult.status === "MISMATCH"
+                            ? "text-rose-600 dark:text-rose-400 bg-rose-500/10"
+                            : "text-[var(--muted)] bg-[var(--surface-secondary)]"
+                        }`}
+                      >
+                        {integrityResult.status === "VERIFIED" && "✓ "}
+                        {integrityResult.status === "MISMATCH" && "⚠ "}
+                        {integrityResult.status}
+                      </span>
+                    </div>
+
+                    {integrityResult.localHash && (
+                      <div className="flex items-start gap-4">
+                        <span className="w-24 shrink-0">Local SHA-256</span>
+                        <span className="text-[var(--fg)] break-all select-all">
+                          {integrityResult.localHash}
+                        </span>
+                      </div>
+                    )}
+
+                    {integrityResult.ledgerHash && (
+                      <div className="flex items-start gap-4">
+                        <span className="w-24 shrink-0">Ledger Hash</span>
+                        <span className="text-[var(--fg)] break-all select-all">
+                          {integrityResult.ledgerHash}
+                        </span>
+                      </div>
+                    )}
+
+                    {integrityResult.txId && (
+                      <div className="flex items-start gap-4">
+                        <span className="w-24 shrink-0">Transaction</span>
+                        <span className="text-[var(--fg)] break-all select-all">
+                          {integrityResult.txId}
+                        </span>
+                      </div>
+                    )}
+
+                    <p className="font-sans text-[var(--subtle)] pt-1">
+                      {integrityResult.message}
+                    </p>
                   </div>
                 )}
               </div>

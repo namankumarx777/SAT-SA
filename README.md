@@ -1,10 +1,10 @@
-# SAT-SA — Supervisory Analytics Tool for SOC Assessment
+# SENTRA — Supervisory Analytics Tool for SOC Assessment
 
-**SAT-SA** is an offline supervisory analytics tool developed for the **Smart India Hackathon (SIH)**. It evaluates periodic Security Operations Centre (SOC) submissions (alerts, cases, assets, escalations) from Critical Sector Entities (CSEs) to help regulators and supervisors identify operational weaknesses, systemic execution gaps, and unmonitored blindspots.
+**SENTRA** is an offline supervisory analytics tool developed for the **Smart India Hackathon (SIH)**. It evaluates periodic Security Operations Centre (SOC) submissions (alerts, cases, assets, escalations) from Critical Sector Entities (CSEs) to help regulators and supervisors identify operational weaknesses, systemic execution gaps, and unmonitored blindspots.
 
 ---
 
-## What SAT-SA Does
+## What SENTRA Does
 
 - **Multi-Dimensional Supervisory Risk Assessment**: Evaluates entities across 6 operational dimensions (*Escalation*, *Investigation*, *Remediation*, *Monitoring*, *Operational Discipline*, *Cyber Resilience*).
 - **Anti-Double-Counting Correlation**: Consolidates overlapping deterministic rules, execution gaps, peer cohort benchmarks, and anomaly detectors into unified correlation groups with bounded corroboration boosts.
@@ -15,7 +15,7 @@
 
 ---
 
-## What SAT-SA Does NOT Do
+## What SENTRA Does NOT Do
 
 - Not a SIEM or live SOC event monitor.
 - Not an automated incident response tool or packet analyzer.
@@ -101,9 +101,25 @@ For the complete 90–120 second demonstration script, see:
 
 ---
 
+## Blockchain Integrity Layer
+
+SENTRA uses a local permissioned **Hyperledger Fabric** network (`SENTRA-channel`, chaincode `SENTRA-integrity`) to store cryptographic SHA-256 commitments for submissions, findings, and selected evidence records.
+
+- **Strict Off-Chain Data Separation**: Raw cybersecurity telemetry (alerts, cases, assets) remains stored locally in Parquet files.
+- **Tamper-Evident Provenance**: Deterministic canonical hashing produces immutable byte-level commitments on-chain.
+- **Resilient Verification**: The application verifies evidence against the ledger with single-click actions (`VERIFIED`, `MISMATCH`, `NOT_REGISTERED`, `UNAVAILABLE`) without interrupting analytics if the blockchain is offline.
+- **Tamper Demo**: Run `backend\.venv\Scripts\python.exe blockchain\scripts\tamper_demo.py` to observe automated detection of unauthorized evidence manipulation.
+
+---
+
 ## Documentation
 
+- [Blockchain Architecture & Provenance](docs/BLOCKCHAIN_ARCHITECTURE.md)
+- [Blockchain Setup & Operation](docs/BLOCKCHAIN_SETUP.md)
+- [Blockchain Tamper Demo Script](docs/BLOCKCHAIN_DEMO.md)
+- [Blockchain Validation Report](docs/BLOCKCHAIN_VALIDATION.md)
 - [Architecture Specification](docs/ARCHITECTURE.md)
 - [SIH Demonstration Script](docs/SIH_DEMO_SCRIPT.md)
 - [Context & Analytical Principles](context.md)
 - [Detailed System Design](design.md)
+

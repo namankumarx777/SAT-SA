@@ -448,14 +448,14 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="p-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3 max-w-lg my-8 mx-auto shadow-sm">
+    <div className="p-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3 max-w-lg my-8 mx-auto">
       <div className="flex items-center gap-2 text-sm font-medium text-[var(--fg)]">
         <AlertCircle className="w-4 h-4 text-[var(--risk-critical-dot)] shrink-0" />
         <span>Unable to load supervisory assessment</span>
       </div>
 
       <p className="text-xs text-[var(--muted)] leading-relaxed">
-        {message || "The local assessment engine may be unavailable or offline."} Check that the local SAT-SA backend is running.
+        {message || "The local assessment engine may be unavailable or offline."} Check that the local SENTRA backend is running.
       </p>
 
       {onRetry && (
@@ -483,7 +483,7 @@ export function EmptyState({
   onReset?: () => void;
 }) {
   return (
-    <div className="p-8 text-center rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2 max-w-md mx-auto my-6 shadow-sm">
+    <div className="p-8 text-center rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2 max-w-md mx-auto my-6">
       <p className="text-sm font-medium text-[var(--fg)]">{title}</p>
       <p className="text-xs text-[var(--muted)]">{description}</p>
       {onReset && (

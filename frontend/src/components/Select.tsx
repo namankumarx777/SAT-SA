@@ -90,32 +90,34 @@ export function Select({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 z-50 mt-1.5 min-w-[150px] max-h-60 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 shadow-lg focus:outline-none animate-in fade-in zoom-in-95 duration-100"
+          className="absolute left-0 z-50 w-full mt-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg overflow-hidden focus:outline-none animate-fade-in"
         >
-          {normalizedOptions.map((opt) => {
-            const isSelected = opt.value === value;
-            return (
-              <div
-                key={opt.value}
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-[var(--surface-secondary)] text-[var(--fg)] font-semibold"
-                    : "text-[var(--muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--fg)]"
-                }`}
-              >
-                <span className="truncate">{opt.label}</span>
-                {isSelected && (
-                  <Check className="w-3.5 h-3.5 text-[var(--fg)] shrink-0" />
-                )}
-              </div>
-            );
-          })}
+          <div className="max-h-60 overflow-y-auto py-1">
+            {normalizedOptions.map((opt) => {
+              const isSelected = opt.value === value;
+              return (
+                <div
+                  key={opt.value}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  className={`flex items-center justify-between gap-2 px-3 py-1.5 text-[13px] transition-colors cursor-pointer ${
+                    isSelected
+                      ? "bg-[var(--surface-secondary)] text-[var(--fg)] font-medium"
+                      : "text-[var(--muted)] hover:bg-[var(--surface-secondary)] hover:text-[var(--fg)]"
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && (
+                    <Check className="w-3.5 h-3.5 text-[var(--fg)] shrink-0" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

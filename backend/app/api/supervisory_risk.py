@@ -5,7 +5,10 @@ from typing import Any
 
 import polars as pl
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.api.security import safe_resolve_path
+from app.config import settings
 
 from app.analytics.supervisory_risk.engine import DEFAULT_OUTPUT, run_supervisory_risk
 
@@ -15,14 +18,15 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 class SupervisoryRiskRequest(BaseModel):
-    input_path: str
-    output_path: str | None = None
-    dataset_id: str | None = None
+    model_config = {"extra": "forbid"}
+    input_path: str = Field(..., description="Path to input directory")
+    output_path: str | None = Field(default=None, description="Path to output directory")
+    dataset_id: str | None = Field(default=None, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
 def _get_output_path(output_path: str | None) -> Path:
     if output_path:
-        return Path(output_path)
+        return safe_resolve_path(settings.data_dir, output_path)
     candidates = [
         REPO_ROOT / "data" / "processed" / "supervisory_risk-final",
         Path("data/processed/supervisory_risk-final"),
@@ -37,8 +41,10 @@ def _get_output_path(output_path: str | None) -> Path:
 @router.post("/run")
 def run_endpoint(request: SupervisoryRiskRequest) -> dict[str, Any]:
     try:
-        dest = request.output_path or str(DEFAULT_OUTPUT)
-        result = run_supervisory_risk(request.input_path, dest, request.dataset_id)
+        in_path = safe_resolve_path(settings.data_dir, request.input_path)
+        out_path = safe_resolve_path(settings.data_dir, request.output_path) if request.output_path else DEFAULT_OUTPUT
+        result = run_supervisory_risk(in_path, out_path, request.dataset_id)
+        dest = str(out_path)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -131,7 +137,7 @@ def get_finding_detail(finding_id: str, input_path: str | None = None) -> dict[s
     from dataclasses import asdict
     from app.analytics.supervisory_risk.inputs import load_upstream_bundle
     if input_path:
-        in_dir = Path(input_path)
+        in_dir = safe_resolve_path(settings.data_dir, input_path)
     else:
         candidates = [
             REPO_ROOT / "data" / "processed",
@@ -178,7 +184,7 @@ def get_review_queue_item(record_id: str, output_path: str | None = None) -> dic
 @router.get("/entities/{entity_id}/dossier")
 def get_entity_dossier(entity_id: str, input_path: str | None = None) -> dict[str, Any]:
     from app.analytics.supervisory_risk.dossier import generate_entity_dossier_data
-    in_dir = Path(input_path) if input_path else (REPO_ROOT / "data" / "processed")
+    in_dir = safe_resolve_path(settings.data_dir, input_path) if input_path else (REPO_ROOT / "data" / "processed")
     try:
         return generate_entity_dossier_data(entity_id, in_dir)
     except ValueError as exc:
@@ -191,7 +197,7 @@ def get_entity_dossier(entity_id: str, input_path: str | None = None) -> dict[st
 def get_entity_dossier_html(entity_id: str, input_path: str | None = None) -> Any:
     from fastapi.responses import HTMLResponse
     from app.analytics.supervisory_risk.dossier import generate_entity_dossier_data, render_entity_dossier_html
-    in_dir = Path(input_path) if input_path else (REPO_ROOT / "data" / "processed")
+    in_dir = safe_resolve_path(settings.data_dir, input_path) if input_path else (REPO_ROOT / "data" / "processed")
     try:
         data = generate_entity_dossier_data(entity_id, in_dir)
         html_content = render_entity_dossier_html(data)

@@ -1,1 +1,1 @@
-"""Deterministic operational feature engineering for SAT-SA."""
+"""Deterministic operational feature engineering for SENTRA."""

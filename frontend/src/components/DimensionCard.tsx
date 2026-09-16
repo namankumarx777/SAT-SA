@@ -7,6 +7,8 @@ interface DimensionCardProps {
   weight: number;
   description?: string;
   thresholds?: RiskBandThresholds;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 export function DimensionCard({
@@ -15,11 +17,22 @@ export function DimensionCard({
   weight,
   description,
   thresholds = FALLBACK_RISK_BAND_THRESHOLDS,
+  isSelected = false,
+  onClick,
 }: DimensionCardProps) {
   const isAssessable = score !== null;
 
   return (
-    <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] transition-all">
+    <div 
+      onClick={onClick}
+      className={`p-4 rounded-xl border transition-colors ${
+        onClick ? "cursor-pointer press-effect" : ""
+      } ${
+        isSelected 
+          ? "border-[var(--fg)] bg-[var(--surface-secondary)]" 
+          : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-secondary)]"
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-2">
         <div>
           <span className="text-[11px] font-mono text-[var(--muted)] tracking-wider uppercase">

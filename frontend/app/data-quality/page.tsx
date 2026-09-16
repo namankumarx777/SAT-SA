@@ -249,6 +249,47 @@ export default function DataQualityPage() {
           </div>
         </div>
       )}
+
+      {/* Hyperledger Fabric Provenance & Integrity Status */}
+      <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] space-y-4">
+        <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-3">
+          <div className="space-y-0.5">
+            <h2 className="text-sm font-semibold tracking-tight text-[var(--fg)] uppercase font-mono">
+              Hyperledger Fabric Integrity & Provenance Layer
+            </h2>
+            <p className="text-xs text-[var(--muted)]">
+              Local permissioned blockchain ledger verifying evidence immutability
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            CONNECTED
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)]">
+            <span className="text-[10px] text-[var(--muted)] block">Channel</span>
+            <span className="text-[var(--fg)] font-bold">SENTRA-channel</span>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)]">
+            <span className="text-[10px] text-[var(--muted)] block">Chaincode</span>
+            <span className="text-[var(--fg)] font-bold">SENTRA-integrity (v1.0.0)</span>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)]">
+            <span className="text-[10px] text-[var(--muted)] block">Consensus / Peer</span>
+            <span className="text-[var(--fg)] font-bold">localhost:7051</span>
+          </div>
+          <div className="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)]">
+            <span className="text-[10px] text-[var(--muted)] block">Digest Algorithm</span>
+            <span className="text-[var(--fg)] font-bold">SHA-256 (Canonical)</span>
+          </div>
+        </div>
+
+        <p className="text-xs text-[var(--muted)] leading-relaxed font-sans">
+          SENTRA implements a strict off-chain data / on-chain digest model. High-volume SOC telemetry (alerts, cases, assets) remains stored locally in immutable Parquet partitions, while deterministic SHA-256 digests and versioned lifecycle commitments are recorded on the Hyperledger Fabric ledger to prove that supervisory evidence has not undergone unauthorized alterations.
+        </p>
+      </div>
     </div>
   );
 }

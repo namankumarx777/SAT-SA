@@ -43,3 +43,13 @@ data/synthetic/*
 
 .DS_Store
 Thumbs.db
+
+# =========================
+# Hyperledger Fabric / Blockchain
+# =========================
+blockchain/**/crypto-config/
+blockchain/**/organizations/
+blockchain/**/system-genesis-block/
+blockchain/**/crypto-material/
+*.exe
+*.test

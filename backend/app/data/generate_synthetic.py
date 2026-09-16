@@ -400,7 +400,7 @@ def generate_dataset(entity_count: int, alert_count: int, seed: int, output_dir:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate the SAT-SA synthetic SOC dataset.")
+    parser = argparse.ArgumentParser(description="Generate the SENTRA synthetic SOC dataset.")
     parser.add_argument("--entities", type=int, default=ENTITIES)
     parser.add_argument("--alerts", type=int, default=ALERTS)
     parser.add_argument("--seed", type=int, default=SEED)
@@ -411,7 +411,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     datasets = generate_dataset(args.entities, args.alerts, args.seed, args.output)
-    print("SAT-SA Synthetic Dataset")
+    print("SENTRA Synthetic Dataset")
     for name, frame in datasets.items():
         print(f"{name.capitalize()}: {frame.height}")
     print("Validation: [OK] relationships, IDs, categories, and timestamps")

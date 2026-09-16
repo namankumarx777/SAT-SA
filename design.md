@@ -1,8 +1,8 @@
-# SAT-SA Design
+# SENTRA Design
 
 ## Architecture
 
-SAT-SA follows a local, file-based analytical pipeline:
+SENTRA follows a local, file-based analytical pipeline:
 
 ```text
 CSE submission
@@ -140,7 +140,7 @@ Phase 9 aggregates heterogeneous outputs from Phases 5–8 into:
    - `risk_contributions.parquet` linking every score back to underlying finding IDs.
    - `supervisory_risk_manifest.json` recording weights, thresholds, methods, and excluded detectors.
 
-## Phase 10: SAT-SA Supervisory Dashboard & SIH Demo Workflow
+## Phase 10: SENTRA Supervisory Dashboard & SIH Demo Workflow
 
 Phase 10 provides the supervisor-facing offline dashboard turning backend analytical models into an intuitive supervisory assessment workflow:
 

@@ -67,9 +67,7 @@ export default function ReviewQueuePage() {
     });
   }, [queue, priorityFilter, recordTypeFilter, searchQuery]);
 
-  const highPriorityCount = queue.filter((q) => q.priority === "HIGH").length;
-  const mediumPriorityCount = queue.filter((q) => q.priority === "MEDIUM").length;
-  const lowPriorityCount = queue.filter((q) => q.priority === "LOW").length;
+
 
   if (loading) {
     return <LoadingSkeleton variant="queue" text="Loading supervisory review queue..." />;
@@ -93,43 +91,31 @@ export default function ReviewQueuePage() {
               What should be inspected first?
             </p>
           </div>
-
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="text-[var(--risk-high-text)] font-semibold">
-              {highPriorityCount} High
-            </span>
-            <span className="text-[var(--subtle)]">•</span>
-            <span className="text-[var(--risk-moderate-text)] font-semibold">
-              {mediumPriorityCount} Medium
-            </span>
-            <span className="text-[var(--subtle)]">•</span>
-            <span className="text-[var(--muted)]">{lowPriorityCount} Low</span>
-          </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3 h-3 absolute left-2.5 top-2.5 text-[var(--muted)]" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
               <input
                 type="text"
                 placeholder="Search record, entity, reason..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2.5 py-1 text-xs rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64"
+                className="pl-8 pr-2.5 h-[34px] text-xs rounded-lg border border-[var(--border)] bg-transparent text-[var(--fg)] placeholder:text-[var(--subtle)] focus:outline-none focus:border-[var(--muted)] w-56 sm:w-64 transition-colors"
               />
             </div>
 
-            <div className="flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
+            <div className="flex items-center h-[34px] rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] p-0.5 text-xs">
               {["ALL", "HIGH", "MEDIUM", "LOW"].map((p) => (
                 <button
                   key={p}
                   onClick={() => setPriorityFilter(p)}
-                  className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition cursor-pointer ${
+                  className={`px-2.5 h-full rounded-md text-[11px] font-medium transition cursor-pointer ${
                     priorityFilter === p
-                      ? "bg-[var(--surface)] text-[var(--fg)] shadow-xs"
-                      : "text-[var(--muted)] hover:text-[var(--fg)]"
+                      ? "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border-subtle)] shadow-xs"
+                      : "text-[var(--muted)] hover-subtle"
                   }`}
                 >
                   {p}
@@ -261,18 +247,18 @@ export default function ReviewQueuePage() {
                       {item.priority_score.toFixed(1)}
                     </span>
                     {item.priority === "HIGH" ? (
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--risk-high-text)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--risk-high-dot)] shrink-0" />
                         <span>High priority</span>
                       </div>
                     ) : item.priority === "MEDIUM" ? (
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--risk-moderate-text)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--risk-moderate-dot)] shrink-0" />
                         <span>Medium priority</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--muted)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600 shrink-0" />
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--risk-low-text)]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--risk-low-dot)] shrink-0" />
                         <span>Low priority</span>
                       </div>
                     )}
@@ -283,14 +269,14 @@ export default function ReviewQueuePage() {
                     {firstFindingId ? (
                       <button
                         onClick={() => setInspectedFindingId(firstFindingId)}
-                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--fg)] transition-all cursor-pointer shadow-xs"
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover-subtle text-[var(--fg)] transition-colors cursor-pointer press-effect"
                       >
                         Inspect
                       </button>
                     ) : (
                       <Link
                         href={`/cses/${item.entity_id}`}
-                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--fg)] transition-all cursor-pointer shadow-xs"
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-[var(--surface-secondary)] hover-subtle text-[var(--fg)] transition-colors cursor-pointer press-effect"
                       >
                         View entity
                       </Link>
@@ -299,7 +285,7 @@ export default function ReviewQueuePage() {
                     {/* Arrow Button to Open CSE Entity Page */}
                     <Link
                       href={`/cses/${item.entity_id}`}
-                      className="inline-flex items-center justify-center p-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] text-[var(--muted)] hover:text-[var(--fg)] transition-all cursor-pointer shadow-xs"
+                      className="inline-flex items-center justify-center p-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] hover-subtle text-[var(--muted)] hover:text-[var(--fg)] transition-colors cursor-pointer press-effect"
                       title={`Open ${item.entity_id} Assessment Page`}
                     >
                       <ArrowRight className="w-4 h-4" />

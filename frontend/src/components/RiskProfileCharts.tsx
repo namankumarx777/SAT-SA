@@ -32,28 +32,28 @@ export function RiskDimensionBarChart({
     weight: `${(d.weight * 100).toFixed(0)}%`,
   }));
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      return (
-        <div className="p-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-md text-xs space-y-1 font-mono">
-          <p className="font-semibold text-[var(--fg)]">{item.dimension}</p>
-          <p className="text-[var(--muted)]">
-            Score:{" "}
-            {item.isAssessable ? (
-              <span className="font-bold text-[var(--fg)]">
-                {item.score.toFixed(1)} / 100
-              </span>
-            ) : (
-              <span className="italic">Not Assessable</span>
-            )}
-          </p>
-          <p className="text-[var(--subtle)] text-[10px]">Weight: {item.weight}</p>
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    return (
+      <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md shadow-xl text-xs space-y-1 font-mono">
+        <p className="font-medium text-[var(--muted)] uppercase tracking-wider text-[10px]">{item.dimension}</p>
+        <div className="flex items-center justify-between gap-4 pt-0.5">
+          <p className="text-[var(--muted)]">Score:</p>
+          {item.isAssessable ? (
+            <span className="font-bold text-[var(--fg)] tabular-nums text-sm">
+              {item.score.toFixed(1)} <span className="text-[10px] text-[var(--muted)] font-normal">/ 100</span>
+            </span>
+          ) : (
+            <span className="italic text-[var(--muted)]">N/A</span>
+          )}
         </div>
-      );
-    }
-    return null;
-  };
+        <p className="text-[var(--subtle)] text-[10px]">Weight: {item.weight}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
   return (
     <div className="w-full h-64">

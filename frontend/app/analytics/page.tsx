@@ -14,6 +14,26 @@ import { api } from "../../src/api";
 import { EntityRisk, ReviewQueueItem, ManifestData } from "../../src/types";
 import { LoadingSkeleton, ErrorState } from "../../src/components/States";
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-md shadow-xl text-xs font-mono space-y-1">
+        <p className="font-medium text-[var(--muted)] uppercase tracking-wider text-[10px]">{label}</p>
+        <div className="flex items-center gap-2 pt-0.5">
+          <span 
+            className="w-1.5 h-1.5 rounded-full" 
+            style={{ backgroundColor: payload[0].payload?.fill || payload[0].color || "var(--fg)" }}
+          />
+          <span className="font-bold text-[var(--fg)] tabular-nums text-sm">
+            {payload[0].value}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function AnalyticsPage() {
   const [entities, setEntities] = useState<EntityRisk[]>([]);
   const [queue, setQueue] = useState<ReviewQueueItem[]>([]);
@@ -127,22 +147,7 @@ export default function AnalyticsPage() {
     { priority: "LOW", count: queue.filter((q) => q.priority === "LOW").length },
   ];
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="p-2 rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-md text-xs font-mono">
-          <p className="font-semibold text-[var(--fg)]">{label}</p>
-          <p className="text-[var(--muted)]">
-            Value:{" "}
-            <span className="font-bold text-[var(--fg)] tabular-nums">
-              {payload[0].value}
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+
 
   return (
     <div className="space-y-6">
@@ -165,19 +170,19 @@ export default function AnalyticsPage() {
       </div>
 
       {/* 4 Focused Visualizations (2x2 Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 py-4">
         {/* 1. Risk by Sector */}
-        <div className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-          <div>
+        <div className="space-y-4">
+          <div className="border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
               Average Risk by Sector
             </span>
-            <span className="text-xs text-[var(--subtle)]">
+            <span className="text-[11px] text-[var(--subtle)]">
               Mean Level 2 score per infrastructure sector
             </span>
           </div>
 
-          <div className="h-48">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sectorRiskData} layout="vertical" margin={{ left: 24, right: 16 }}>
                 <XAxis type="number" domain={[0, 100]} stroke="var(--muted)" fontSize={10} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
@@ -190,17 +195,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* 2. Dimension Risk Averages */}
-        <div className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-          <div>
+        <div className="space-y-4">
+          <div className="border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
               Population Dimension Averages
             </span>
-            <span className="text-xs text-[var(--subtle)]">
+            <span className="text-[11px] text-[var(--subtle)]">
               Mean score per operational dimension across 12 entities
             </span>
           </div>
 
-          <div className="h-48">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dimensionAverages} layout="vertical" margin={{ left: 24, right: 16 }}>
                 <XAxis type="number" domain={[0, 100]} stroke="var(--muted)" fontSize={10} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
@@ -213,17 +218,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* 3. Risk Band Distribution */}
-        <div className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-          <div>
+        <div className="space-y-4">
+          <div className="border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
               Risk Band Counts
             </span>
-            <span className="text-xs text-[var(--subtle)]">
+            <span className="text-[11px] text-[var(--subtle)]">
               Entity count by supervisory risk tier
             </span>
           </div>
 
-          <div className="h-48">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={bandCounts} margin={{ left: 0, right: 16 }}>
                 <XAxis dataKey="band" stroke="var(--muted)" fontSize={11} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
@@ -251,17 +256,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* 4. Review Queue Urgency Breakdown */}
-        <div className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-3">
-          <div>
+        <div className="space-y-4">
+          <div className="border-b border-[var(--border-subtle)] pb-2">
             <span className="text-[11px] font-mono uppercase text-[var(--muted)] tracking-wider block">
               Review Queue Urgency
             </span>
-            <span className="text-xs text-[var(--subtle)]">
+            <span className="text-[11px] text-[var(--subtle)]">
               Inspector triage distribution ({queue.length} total items)
             </span>
           </div>
 
-          <div className="h-48">
+          <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={queueCounts} margin={{ left: 0, right: 16 }}>
                 <XAxis dataKey="priority" stroke="var(--muted)" fontSize={11} tickLine={false} axisLine={{ stroke: "var(--border)" }} />

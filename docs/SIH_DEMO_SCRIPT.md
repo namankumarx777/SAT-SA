@@ -1,6 +1,6 @@
-# SAT-SA — Smart India Hackathon (SIH) Demonstration Script
+# SENTRA — Smart India Hackathon (SIH) Demonstration Script
 
-**Title**: SAT-SA: Supervisory Analytics Tool for SOC Assessment  
+**Title**: SENTRA: Supervisory Analytics Tool for SOC Assessment  
 **Target Duration**: 90–120 Seconds  
 **Demonstration Mode**: Offline / Local Assessment Environment  
 **Primary Demonstration Entity**: `CSE-011` (North Grid 11 Energy)  
@@ -9,7 +9,7 @@
 
 ## 0:00 – 0:15 | The National Portfolio Snapshot
 
-1. **Open SAT-SA Dashboard (`http://localhost:3000`)**:
+1. **Open SENTRA Dashboard (`http://localhost:3000`)**:
    - Point to the Top Header: *Offline Assessment • Local Engine*.
    - Point to the 5 executive KPI cards:
      - **12 Assessed CSEs** across Critical Infrastructure sectors.
@@ -18,7 +18,7 @@
      - **21 Items Requiring Review** (`9 High Urgency`).
      - **100% Assessment Coverage** across telemetry.
 2. **Explain the National Risk Distribution**:
-   - *"SAT-SA ingests periodic SOC submissions from critical sector entities and evaluates them across 6 operational dimensions without requiring live event streaming or cloud dependencies."*
+   - *"SENTRA ingests periodic SOC submissions from critical sector entities and evaluates them across 6 operational dimensions without requiring live event streaming or cloud dependencies."*
 
 ---
 
@@ -52,7 +52,7 @@
    - Highlight the **Investigation Risk (100.0/100)** breakdown:
      - Corroborated by **`R004`** (Rule: low investigation duration), **`EG002`** (Execution Gap: 12.5 min median gap vs 20.0 min baseline), **`PB002`** (Peer Deviation), and **`AN001`** (Contextual Anomaly).
 2. **Key Differentiator**:
-   - *"When four independent detectors identify the same operational weakness, SAT-SA consolidates them into ONE correlation group (`INVESTIGATION_EFFORT`) with a bounded corroboration boost (+24%), rather than naively summing the penalties to an absurd >200 score."*
+   - *"When four independent detectors identify the same operational weakness, SENTRA consolidates them into ONE correlation group (`INVESTIGATION_EFFORT`) with a bounded corroboration boost (+24%), rather than naively summing the penalties to an absurd >200 score."*
 
 ---
 
@@ -83,4 +83,4 @@
 ## 1:55 – 2:00 | Conclusion
 
 1. **Final Wrap-Up**:
-   - *"SAT-SA turns complex, heterogeneous SOC submissions into explainable, traceable supervisory insight — enabling regulators and supervisors to know exactly who needs attention, why, and what concrete evidence supports it."*
+   - *"SENTRA turns complex, heterogeneous SOC submissions into explainable, traceable supervisory insight — enabling regulators and supervisors to know exactly who needs attention, why, and what concrete evidence supports it."*

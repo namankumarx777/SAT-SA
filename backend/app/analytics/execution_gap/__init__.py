@@ -1,1 +1,1 @@
-"""Deterministic execution-gap detection for SAT-SA."""
+"""Deterministic execution-gap detection for SENTRA."""

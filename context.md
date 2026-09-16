@@ -1,8 +1,8 @@
-# SAT-SA Context
+# SENTRA Context
 
 ## Purpose
 
-SAT-SA (Supervisory Analytics Tool for SOC Assessment) is an offline platform for analysing periodic Security Operations Centre (SOC) alert, asset, case, and escalation submissions from Critical Sector Entities (CSEs).
+SENTRA (Supervisory Analytics Tool for SOC Assessment) is an offline platform for analysing periodic Security Operations Centre (SOC) alert, asset, case, and escalation submissions from Critical Sector Entities (CSEs).
 
 The platform is intended to help supervisors identify operational evidence that may require review. It produces explainable operational signals and findings; it does not make final supervisory or compliance judgements.
 

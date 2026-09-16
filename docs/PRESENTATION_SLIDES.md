@@ -1,4 +1,4 @@
-# SAT-SA: Technical Presentation (5 Slides)
+# SENTRA: Technical Presentation (5 Slides)
 ### Supervisory Analytics Tool for SOC Assessment
 **National Technical Research Organisation (NTRO) / NCIIPC**
 
@@ -12,7 +12,7 @@
 - **The Two Hidden Failure Modes**:
   1. **Execution Gaps**: Policies say critical alerts are escalated in 15 mins; operational evidence reveals rapid closures in <2 mins without remediation or escalation.
   2. **Negative Space**: Critical assets producing zero security telemetry, missing essential alert categories (e.g. host/EDR), or orphan alerts with zero investigation cases.
-- **The Supervisory Solution**: SAT-SA automates the extraction of operational evidence from periodic submissions without replacing human examiners.
+- **The Supervisory Solution**: SENTRA automates the extraction of operational evidence from periodic submissions without replacing human examiners.
 
 ---
 

@@ -91,7 +91,7 @@ def generate_features(input_dir: str | Path, output_dir: str | Path = DEFAULT_OU
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate SAT-SA Phase 4 operational features.")
+    parser = argparse.ArgumentParser(description="Generate SENTRA Phase 4 operational features.")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--dataset-id")

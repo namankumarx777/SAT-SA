@@ -1,1 +1,1 @@
-"""Deterministic negative-space detection for SAT-SA."""
+"""Deterministic negative-space detection for SENTRA."""

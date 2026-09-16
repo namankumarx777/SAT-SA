@@ -338,7 +338,7 @@ def render_entity_dossier_html(dossier: dict[str, Any]) -> str:
 <body>
 
 <div class="print-btn-bar">
-  <span><strong>SAT-SA Supervisory Examination Dossier</strong> &bull; Official Regulatory Report</span>
+  <span><strong>SENTRA Supervisory Examination Dossier</strong> &bull; Official Regulatory Report</span>
   <button onclick="window.print()">Print / Save as PDF</button>
 </div>
 
@@ -473,7 +473,7 @@ def render_entity_dossier_html(dossier: dict[str, Any]) -> str:
 </table>
 
 <div class="footer">
-  <div>SAT-SA Supervisory Analytics Tool for SOC Assessment &bull; Offline Air-Gapped Engine</div>
+  <div>SENTRA Supervisory Analytics Tool for SOC Assessment &bull; Offline Air-Gapped Engine</div>
   <div>NCIIPC / NTRO &bull; Verification Hash: {dossier['dossier_id']}</div>
   <div>Page 1 of 1</div>
 </div>
@@ -484,7 +484,7 @@ def render_entity_dossier_html(dossier: dict[str, Any]) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate SAT-SA Supervisory Examination Dossier.")
+    parser = argparse.ArgumentParser(description="Generate SENTRA Supervisory Examination Dossier.")
     parser.add_argument("--entity", required=True, help="Entity ID (e.g. CSE-011)")
     parser.add_argument("--input", default=None, help="Root path to processed datasets")
     parser.add_argument("--output", default=None, help="Output file path (HTML or JSON)")

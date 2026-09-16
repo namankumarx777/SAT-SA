@@ -152,7 +152,7 @@ def ingest_dataset(input_path: str | Path, output_root: str | Path = DEFAULT_PRO
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate and ingest SAT-SA CSE submissions.")
+    parser = argparse.ArgumentParser(description="Validate and ingest SENTRA CSE submissions.")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--type", dest="dataset_type", choices=DATASET_NAMES)
     parser.add_argument("--output", type=Path, default=DEFAULT_PROCESSED_DIR)

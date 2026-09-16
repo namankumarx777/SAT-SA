@@ -13,7 +13,9 @@ import {
   X,
   ArrowRight,
 } from "lucide-react";
+import Image from "next/image";
 import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "./ThemeProvider";
 
 interface ShellProps {
   children: React.ReactNode;
@@ -23,6 +25,7 @@ export function Shell({ children }: ShellProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
@@ -66,23 +69,34 @@ export function Shell({ children }: ShellProps) {
     },
   ];
 
+  const currentLogoSrc = mounted
+    ? resolvedTheme === "dark"
+      ? "/sentra_whiteonblack.png"
+      : "/sentra_blackonwhite.png"
+    : "/sentra_whiteonblack.png";
+
   return (
     <div className="h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col font-sans overflow-hidden">
       {/* Top Header - Restrained, Flush, Nearly Invisible Chrome */}
-      <header className="h-13 border-b border-[var(--border)] bg-[var(--surface)] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 transition-colors shrink-0">
+      <header className="h-15 border-b border-[var(--border)] bg-[var(--surface)] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 transition-colors shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-1.5 rounded-md text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-secondary)] transition"
+            className="md:hidden p-1.5 rounded-md text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-secondary)] transition cursor-pointer"
             aria-label="Toggle navigation"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="font-semibold text-sm tracking-tight text-[var(--fg)]">
-              SAT-SA
-            </span>
+          <Link href="/" className="flex items-center py-1">
+            <Image
+              src={currentLogoSrc}
+              alt="SENTRA"
+              width={160}
+              height={52}
+              className="h-9 sm:h-10 w-auto object-contain transition-opacity duration-150"
+              priority
+            />
           </Link>
         </div>
 
@@ -149,6 +163,21 @@ export function Shell({ children }: ShellProps) {
               className="w-64 bg-[var(--surface)] border-r border-[var(--border)] h-full p-4 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
+              <div className="pb-3 border-b border-[var(--border)]">
+                <Link
+                  href="/"
+                  className="flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Image
+                    src={currentLogoSrc}
+                    alt="SENTRA"
+                    width={140}
+                    height={46}
+                    className="h-8.5 w-auto object-contain"
+                  />
+                </Link>
+              </div>
               <span className="text-[10px] font-mono text-[var(--subtle)] uppercase tracking-wider block">
                 Supervisory Navigation
               </span>
@@ -190,7 +219,7 @@ export function Shell({ children }: ShellProps) {
 
         {/* Page Content Viewport */}
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-8 pt-0 bg-[var(--bg)] transition-colors">
-          <div className="max-w-6xl mx-auto pt-4 sm:pt-6 lg:pt-8 space-y-6 animate-in fade-in duration-200">
+          <div className="max-w-6xl mx-auto pt-4 sm:pt-6 lg:pt-8 space-y-6 animate-page-enter">
             {children}
           </div>
         </main>

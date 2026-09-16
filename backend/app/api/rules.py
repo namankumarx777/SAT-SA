@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.api.security import safe_resolve_path
+from app.config import settings
 
 from app.analytics.rules.definitions import enabled_rules
 from app.analytics.rules.engine import DEFAULT_OUTPUT, run_rules
@@ -15,19 +18,23 @@ findings_router = APIRouter(tags=["findings"])
 
 
 class RuleRunRequest(BaseModel):
-    input_path: str
-    output_path: str | None = None
-    dataset_id: str | None = None
+    model_config = {"extra": "forbid"}
+    input_path: str = Field(..., description="Path to input directory")
+    output_path: str | None = Field(default=None, description="Path to output directory")
+    dataset_id: str | None = Field(default=None, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
 def _phase_store(output_path: str | None) -> PhaseStore:
-    return PhaseStore("phase5", Path(output_path) if output_path else DEFAULT_OUTPUT)
+    path = safe_resolve_path(settings.data_dir, output_path) if output_path else DEFAULT_OUTPUT
+    return PhaseStore("phase5", path)
 
 
 @router.post("/rules/run")
 def run_rule_endpoint(request: RuleRunRequest) -> dict[str, Any]:
     try:
-        result = run_rules(request.input_path, request.output_path or DEFAULT_OUTPUT, request.dataset_id)
+        in_path = safe_resolve_path(settings.data_dir, request.input_path)
+        out_path = safe_resolve_path(settings.data_dir, request.output_path) if request.output_path else DEFAULT_OUTPUT
+        result = run_rules(in_path, out_path, request.dataset_id)
     except (ValueError, FileNotFoundError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {

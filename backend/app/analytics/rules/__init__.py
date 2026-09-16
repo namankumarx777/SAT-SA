@@ -1,1 +1,1 @@
-"""Deterministic supervisory rule evaluation for SAT-SA."""
+"""Deterministic supervisory rule evaluation for SENTRA."""

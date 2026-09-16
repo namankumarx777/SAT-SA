@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.api.security import safe_resolve_path
+from app.config import settings
 
 from app.analytics.execution_gap.definitions import DETECTORS
 from app.analytics.execution_gap.engine import DEFAULT_OUTPUT, run_execution_gap
@@ -14,19 +17,23 @@ router = APIRouter(prefix="/analytics/execution-gap", tags=["execution-gap"])
 
 
 class ExecutionGapRequest(BaseModel):
-    input_path: str
-    output_path: str | None = None
-    dataset_id: str | None = None
+    model_config = {"extra": "forbid"}
+    input_path: str = Field(..., description="Path to phase5 output")
+    output_path: str | None = Field(default=None, description="Path to output directory")
+    dataset_id: str | None = Field(default=None, max_length=100, pattern=r"^[a-zA-Z0-9_-]+$")
 
 
 def _phase_store(output_path: str | None) -> PhaseStore:
-    return PhaseStore("phase6", Path(output_path) if output_path else DEFAULT_OUTPUT)
+    path = safe_resolve_path(settings.data_dir, output_path) if output_path else DEFAULT_OUTPUT
+    return PhaseStore("phase6", path)
 
 
 @router.post("/run")
 def run_endpoint(request: ExecutionGapRequest) -> dict[str, Any]:
     try:
-        result = run_execution_gap(request.input_path, request.output_path or DEFAULT_OUTPUT, request.dataset_id)
+        in_path = safe_resolve_path(settings.data_dir, request.input_path)
+        out_path = safe_resolve_path(settings.data_dir, request.output_path) if request.output_path else DEFAULT_OUTPUT
+        result = run_execution_gap(in_path, out_path, request.dataset_id)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {

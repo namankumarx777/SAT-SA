@@ -111,21 +111,28 @@ def evaluate_all(bundle: dict[str, pl.DataFrame]) -> PeerAnomalyRunResult:
 
 
 def write_outputs(result: PeerAnomalyRunResult, output_dir: str | Path, dataset_id: str, feature_list: list[str]) -> None:
-    destination = Path(output_dir); destination.mkdir(parents=True, exist_ok=True)
-    canonical_frame(result.findings).write_parquet(destination / "findings.parquet")
-    canonical_frame(result.evidence).write_parquet(destination / "evidence.parquet")
-    manifest = {
-        "schema_version": "1.0", "dataset_id": dataset_id, "generated_at": datetime.now(timezone.utc).isoformat(),
-        "peer_detectors": [key for key in DETECTORS if key.startswith("PB")], "anomaly_detectors": ["AN001"],
-        "cohort_definition": COHORT_COLUMNS, "minimum_cohort_size": MIN_COHORT_SIZE,
-        "thresholds": {key: value.thresholds for key, value in DETECTORS.items()},
-        "anomaly_configuration": {"contamination": 0.10, "random_state": 42, "n_estimators": 200, "feature_imputation": "column median after excluding features with >50% missingness"},
-        "feature_list": feature_list, "deferred_detectors": {},
-        "evidence_strength_methodology": "Evidence strength reflects peer count, deviation magnitude, supporting metrics, and model context; it is not statistical confidence.",
-        "limitations": "AN001 uses one global entity-level Isolation Forest; peer cohorts provide contextual comparison but are not used as model labels.",
-        "row_counts": {"findings": len(result.findings), "evidence": len(result.evidence)},
-    }
-    (destination / "peer_anomaly_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    import tempfile
+    destination = Path(output_dir)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    
+    with tempfile.TemporaryDirectory(dir=destination.parent, prefix=".tmp-peer-") as temporary:
+        temp_path = Path(temporary)
+        canonical_frame(result.findings).write_parquet(temp_path / "findings.parquet")
+        canonical_frame(result.evidence).write_parquet(temp_path / "evidence.parquet")
+        manifest = {
+            "schema_version": "1.0", "dataset_id": dataset_id, "generated_at": datetime.now(timezone.utc).isoformat(),
+            "peer_detectors": [key for key in DETECTORS if key.startswith("PB")], "anomaly_detectors": ["AN001"],
+            "cohort_definition": COHORT_COLUMNS, "minimum_cohort_size": MIN_COHORT_SIZE,
+            "thresholds": {key: value.thresholds for key, value in DETECTORS.items()},
+            "anomaly_configuration": {"contamination": 0.10, "random_state": 42, "n_estimators": 200, "feature_imputation": "column median after excluding features with >50% missingness"},
+            "feature_list": feature_list, "deferred_detectors": {},
+            "evidence_strength_methodology": "Evidence strength reflects peer count, deviation magnitude, supporting metrics, and model context; it is not statistical confidence.",
+            "limitations": "AN001 uses one global entity-level Isolation Forest; peer cohorts provide contextual comparison but are not used as model labels.",
+            "row_counts": {"findings": len(result.findings), "evidence": len(result.evidence)},
+        }
+        (temp_path / "peer_anomaly_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        
+        temp_path.replace(destination)
 
 
 def run_peer_anomaly(input_dir: str | Path, output_dir: str | Path = DEFAULT_OUTPUT, dataset_id: str | None = None) -> PeerAnomalyRunResult:
@@ -137,7 +144,7 @@ def run_peer_anomaly(input_dir: str | Path, output_dir: str | Path = DEFAULT_OUT
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run SAT-SA peer benchmarking and unknown anomaly detection.")
+    parser = argparse.ArgumentParser(description="Run SENTRA peer benchmarking and unknown anomaly detection.")
     parser.add_argument("--input", required=True, type=Path); parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT); parser.add_argument("--dataset-id")
     return parser.parse_args()
 

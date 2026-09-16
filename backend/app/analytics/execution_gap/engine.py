@@ -38,11 +38,17 @@ def evaluate_all(feature_bundle: dict[str, pl.DataFrame]) -> ExecutionGapRunResu
 
 
 def write_outputs(result: ExecutionGapRunResult, output_dir: str | Path, dataset_id: str) -> None:
+    import tempfile
     destination = Path(output_dir)
-    destination.mkdir(parents=True, exist_ok=True)
-    canonical_frame(result.findings).write_parquet(destination / "findings.parquet")
-    canonical_frame(result.evidence).write_parquet(destination / "evidence.parquet")
-    write_manifest(destination, dataset_id, result)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    
+    with tempfile.TemporaryDirectory(dir=destination.parent, prefix=".tmp-gap-") as temporary:
+        temp_path = Path(temporary)
+        canonical_frame(result.findings).write_parquet(temp_path / "findings.parquet")
+        canonical_frame(result.evidence).write_parquet(temp_path / "evidence.parquet")
+        write_manifest(temp_path, dataset_id, result)
+        
+        temp_path.replace(destination)
 
 
 def run_execution_gap(input_dir: str | Path, output_dir: str | Path = DEFAULT_OUTPUT, dataset_id: str | None = None) -> ExecutionGapRunResult:
@@ -52,7 +58,7 @@ def run_execution_gap(input_dir: str | Path, output_dir: str | Path = DEFAULT_OU
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run SAT-SA execution-gap detectors.")
+    parser = argparse.ArgumentParser(description="Run SENTRA execution-gap detectors.")
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--dataset-id")
