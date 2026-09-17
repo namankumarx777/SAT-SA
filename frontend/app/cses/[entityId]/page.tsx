@@ -172,46 +172,24 @@ export default function CSEDetailPage() {
 
   return (
     <div className="space-y-8">
-      {/* Back Navigation, Breadcrumb & Export Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/cses"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>CSE Assessments</span>
-          </Link>
-
-          <Link
-            href="/review-queue"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--muted)] hover:text-[var(--fg)] transition"
-          >
-            <span>Review Queue</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Supervisory Dossier Export Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrintPdf}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm cursor-pointer"
-            title="Open printable examination dossier (Save as PDF)"
-          >
-            <Printer className="w-3.5 h-3.5 text-sky-500" />
-            <span>Print / PDF Dossier</span>
-          </button>
-          <button
-            onClick={handleDownloadJson}
-            disabled={downloadingJson}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm disabled:opacity-50 cursor-pointer"
-            title="Download full JSON audit dossier"
-          >
-            <Download className="w-3.5 h-3.5 text-[var(--muted)]" />
-            <span>{downloadingJson ? "Exporting..." : "Audit JSON"}</span>
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <button
+          onClick={handlePrintPdf}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm cursor-pointer"
+          title="Open printable examination dossier (Save as PDF)"
+        >
+          <Printer className="w-3.5 h-3.5 text-sky-500" />
+          <span>Print / PDF Dossier</span>
+        </button>
+        <button
+          onClick={handleDownloadJson}
+          disabled={downloadingJson}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-xs font-medium text-[var(--fg)] hover:bg-[var(--border)] transition shadow-sm disabled:opacity-50 cursor-pointer"
+          title="Download full JSON audit dossier"
+        >
+          <Download className="w-3.5 h-3.5 text-[var(--muted)]" />
+          <span>{downloadingJson ? "Exporting..." : "Audit JSON"}</span>
+        </button>
       </div>
 
       {/* Editorial Identity & Risk Hero */}
@@ -220,16 +198,7 @@ export default function CSEDetailPage() {
           {/* Identity */}
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-[var(--muted)]">
-              <span>{entity.entity_id}</span>
-              <span>•</span>
               <span>{entity.sector || "Energy & Utilities"}</span>
-              <span>•</span>
-              <span>{entity.criticality || "MEDIUM"} Criticality</span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Ledger Tracked
-              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--fg)]">
               {entity.name || entity.entity_id}
@@ -317,7 +286,7 @@ export default function CSEDetailPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-tertiary)] text-[var(--fg)] transition"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>Inspect Primary Evidence ({primaryFindingId}) &rarr;</span>
+                  <span>Inspect Primary Evidence ({primaryFindingId})</span>
                 </button>
               ) : (
                 <span className="text-xs font-mono text-[var(--subtle)]">
@@ -429,8 +398,8 @@ export default function CSEDetailPage() {
                       <tr
                         onClick={() => setExpandedRowId(isExpanded ? null : c.id)}
                         className={`transition-all cursor-pointer ${selectedDimension && selectedDimension !== c.dimension
-                            ? "opacity-30 hover:opacity-100 bg-[var(--bg)]"
-                            : "hover-subtle"
+                          ? "opacity-30 hover:opacity-100 bg-[var(--bg)]"
+                          : "hover-subtle"
                           } ${selectedDimension === c.dimension
                             ? "bg-[var(--surface-secondary)] border-l-2 border-l-[var(--fg)]"
                             : ""

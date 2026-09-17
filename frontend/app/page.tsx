@@ -60,10 +60,10 @@ export default function OverviewPage() {
   const avgCoverage =
     entities.length > 0
       ? (
-          (entities.reduce((sum, e) => sum + e.assessment_coverage, 0) /
-            entities.length) *
-          100
-        ).toFixed(0)
+        (entities.reduce((sum, e) => sum + e.assessment_coverage, 0) /
+          entities.length) *
+        100
+      ).toFixed(0)
       : "100";
 
   const uniqueSectors = useMemo(() => {
@@ -108,14 +108,6 @@ export default function OverviewPage() {
             Current assessment across submitted CSE telemetry
           </p>
         </div>
-
-        <Link
-          href="/cses/CSE-011"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--fg)] hover:text-[var(--muted)] transition self-start sm:self-auto"
-        >
-          <span>Primary Demo: CSE-011</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
       </div>
 
       {/* KPI Metric Cards in Rounded Containers */}
@@ -279,11 +271,10 @@ export default function OverviewPage() {
                 <button
                   key={band}
                   onClick={() => setSelectedBand(band)}
-                  className={`px-2.5 h-full rounded-md text-[11px] font-medium transition cursor-pointer ${
-                    selectedBand === band
-                      ? "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border-subtle)] shadow-xs"
-                      : "text-[var(--muted)] hover-subtle"
-                  }`}
+                  className={`px-2.5 h-full rounded-md text-[11px] font-medium transition cursor-pointer ${selectedBand === band
+                    ? "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border-subtle)] shadow-xs"
+                    : "text-[var(--muted)] hover-subtle"
+                    }`}
                 >
                   {band}
                 </button>
