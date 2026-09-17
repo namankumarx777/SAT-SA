@@ -9,6 +9,7 @@ import {
   ListTodo,
   BarChart3,
   ShieldCheck,
+  Blocks,
   Menu,
   X,
   ArrowRight,
@@ -66,6 +67,12 @@ export function Shell({ children }: ShellProps) {
       href: "/data-quality",
       icon: ShieldCheck,
       active: pathname.startsWith("/data-quality"),
+    },
+    {
+      label: "Blockchain Ledger",
+      href: "/blockchain",
+      icon: Blocks,
+      active: pathname.startsWith("/blockchain"),
     },
   ];
 

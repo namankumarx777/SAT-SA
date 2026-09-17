@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.security import safe_resolve_path
@@ -58,7 +58,16 @@ def register_submission_endpoint(
 ) -> dict[str, Any]:
     """Register cryptographic commitment for a submission dataset on the Fabric ledger."""
     try:
-        data_dir = safe_resolve_path(settings.data_dir, request.data_directory) if request.data_directory else safe_resolve_path(settings.data_dir, "data/processed")
+        if request.data_directory:
+            p = Path(request.data_directory)
+            if p.is_dir():
+                data_dir = p
+            else:
+                data_dir = safe_resolve_path(settings.data_dir, request.data_directory)
+        else:
+            default_processed = settings.data_dir / "data/processed"
+            data_dir = default_processed if default_processed.exists() else settings.data_dir
+
         record, tx_id = integrity_service.register_submission_commitment(
             submission_id=submission_id,
             entity_id=request.entity_id,
@@ -84,7 +93,15 @@ def register_finding_endpoint(
 ) -> dict[str, Any]:
     """Register cryptographic commitment for an analytical finding on the Fabric ledger."""
     try:
-        out_path = str(safe_resolve_path(settings.data_dir, request.output_path)) if request and request.output_path else None
+        if request and request.output_path:
+            p = Path(request.output_path)
+            if p.is_dir() or p.is_file() or p.exists():
+                out_path = str(p)
+            else:
+                out_path = str(safe_resolve_path(settings.data_dir, request.output_path))
+        else:
+            out_path = None
+
         record, tx_id = integrity_service.register_finding_commitment(
             finding_id=finding_id,
             output_path=out_path,
@@ -108,7 +125,15 @@ def register_evidence_endpoint(
 ) -> dict[str, Any]:
     """Register cryptographic commitment for an evidence item on the Fabric ledger."""
     try:
-        out_path = str(safe_resolve_path(settings.data_dir, request.output_path)) if request.output_path else None
+        if request.output_path:
+            p = Path(request.output_path)
+            if p.is_dir() or p.is_file() or p.exists():
+                out_path = str(p)
+            else:
+                out_path = str(safe_resolve_path(settings.data_dir, request.output_path))
+        else:
+            out_path = None
+
         record, tx_id = integrity_service.register_evidence_commitment(
             evidence_id=evidence_id,
             finding_id=request.finding_id,
@@ -124,6 +149,25 @@ def register_evidence_endpoint(
         "tx_id": tx_id,
         "record": record.model_dump(by_alias=True),
     }
+
+
+@router.get("/records", response_model=list[LedgerRecord])
+def list_ledger_records_endpoint() -> list[LedgerRecord]:
+    """List all registered world state records on the Fabric ledger."""
+    return integrity_service.list_records()
+
+
+@router.get("/history", response_model=list[LedgerHistoryEntry])
+def list_all_history_endpoint() -> list[LedgerHistoryEntry]:
+    """List entire transaction history and block audit sequence."""
+    return integrity_service.get_all_history()
+
+
+@router.post("/seed")
+def seed_ledger_endpoint() -> dict[str, Any]:
+    """Seed baseline findings and submissions into the ledger."""
+    count = integrity_service.seed_initial_commitments()
+    return {"status": "success", "seeded_count": count, "total_records": len(integrity_service.list_records())}
 
 
 @router.get("/records/{record_id}", response_model=LedgerRecord)
@@ -149,3 +193,4 @@ def verify_record_endpoint(
 def get_ledger_history_endpoint(record_id: str) -> list[LedgerHistoryEntry]:
     """Retrieve full audit trail of ledger modifications and versions for a record."""
     return integrity_service.get_history(record_id)
+

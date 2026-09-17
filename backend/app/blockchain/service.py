@@ -168,6 +168,67 @@ class BlockchainIntegrityService:
 
         return self.client.verify_record(record_id, computed_hash)
 
+    def seed_initial_commitments(self) -> int:
+        count = 0
+        data_dir_candidates = [
+            Path("data/processed"),
+            Path("../data/processed"),
+            Path(__file__).resolve().parents[3] / "data/processed",
+        ]
+        data_dir = next((p for p in data_dir_candidates if p.is_dir()), None)
+        if not data_dir:
+            return 0
+
+        # Seed Phase 5 - 9 findings
+        for phase, dirname in PHASE_DIRS:
+            store_dir = data_dir / dirname
+            if not store_dir.is_dir():
+                continue
+            store = PhaseStore(phase, store_dir)
+            try:
+                findings = store.read_findings()
+                for f in findings:
+                    fid = str(f.get("id") or f.get("finding_id", ""))
+                    if fid and not self.client.get_record(fid):
+                        try:
+                            self.register_finding_commitment(fid, output_path=str(store_dir))
+                            count += 1
+                        except Exception:
+                            pass
+            except Exception:
+                continue
+
+        # Also seed sample submissions if available
+        for entity_id in ["CSE-A", "CSE-B", "CSE-011", "CSE-012", "CSE-014"]:
+            sub_id = f"SUB-{entity_id}-2026-Q1"
+            if not self.client.get_record(sub_id):
+                try:
+                    self.register_submission_commitment(
+                        submission_id=sub_id,
+                        entity_id=entity_id,
+                        period="2026-Q1",
+                        data_directory=data_dir,
+                    )
+                    count += 1
+                except Exception:
+                    pass
+
+        return count
+
+    def list_records(self) -> list[LedgerRecord]:
+        records = self.client.list_records()
+        if not records:
+            self.seed_initial_commitments()
+            records = self.client.list_records()
+        return records
+
+    def get_all_history(self) -> list[LedgerHistoryEntry]:
+        history = self.client.get_all_history()
+        if not history:
+            self.seed_initial_commitments()
+            history = self.client.get_all_history()
+        return history
+
     def get_record(self, record_id: str) -> LedgerRecord | None:
         return self.client.get_record(record_id)
 
@@ -176,3 +237,4 @@ class BlockchainIntegrityService:
 
 
 integrity_service = BlockchainIntegrityService()
+

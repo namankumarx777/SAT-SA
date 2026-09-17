@@ -72,8 +72,8 @@ export function Select({
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`inline-flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] font-medium transition-all hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--fg)] cursor-pointer select-none ${
-          size === "sm" ? "px-3 py-1.5 text-[13px] h-[34px]" : "px-3.5 py-2 text-sm h-[38px]"
+        className={`w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-secondary)] text-[var(--fg)] font-medium transition-all hover:bg-[var(--surface-tertiary)] hover:border-[var(--muted)] focus:outline-hidden focus:ring-1 focus:ring-[var(--fg)] cursor-pointer select-none ${
+          size === "sm" ? "px-3 py-1.5 text-[12px] h-[32px]" : "px-3.5 py-2 text-xs h-[36px]"
         }`}
       >
         <span className="truncate">
@@ -90,7 +90,7 @@ export function Select({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 z-50 w-full mt-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg overflow-hidden focus:outline-none animate-fade-in"
+          className="absolute left-0 z-50 min-w-full w-max max-w-md mt-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-xl overflow-hidden focus:outline-hidden"
         >
           <div className="max-h-60 overflow-y-auto py-1">
             {normalizedOptions.map((opt) => {

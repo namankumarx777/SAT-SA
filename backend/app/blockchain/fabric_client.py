@@ -160,6 +160,20 @@ class LocalLedgerClient:
         self._history.setdefault(commitment.record_id, []).append(entry)
         return record, tx_id
 
+    def list_records(self) -> list[LedgerRecord]:
+        if not self._is_online:
+            return []
+        return list(self._records.values())
+
+    def get_all_history(self) -> list[LedgerHistoryEntry]:
+        if not self._is_online:
+            return []
+        all_entries: list[LedgerHistoryEntry] = []
+        for entries in self._history.values():
+            all_entries.extend(entries)
+        all_entries.sort(key=lambda x: x.timestamp, reverse=True)
+        return all_entries
+
     def get_record(self, record_id: str) -> LedgerRecord | None:
         if not self._is_online:
             return None

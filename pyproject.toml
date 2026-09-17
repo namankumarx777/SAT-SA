@@ -4,3 +4,6 @@ testpaths = ["tests"]
 
 [tool.pyright]
 extraPaths = ["backend"]
+venvPath = "backend"
+venv = ".venv"
+

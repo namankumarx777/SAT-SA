@@ -87,6 +87,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(expectedHash ? { expected_hash: expectedHash } : {}),
     }),
+  getLedgerRecords: () =>
+    apiFetch<LedgerRecord[]>("/blockchain/records"),
+  getAllLedgerHistory: () =>
+    apiFetch<LedgerHistoryEntry[]>("/blockchain/history"),
+  seedLedger: () =>
+    apiFetch<{ status: string; seeded_count: number; total_records: number }>("/blockchain/seed", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   getLedgerRecord: (recordId: string) =>
     apiFetch<LedgerRecord>(`/blockchain/records/${encodeURIComponent(recordId)}`),
   getLedgerHistory: (recordId: string) =>

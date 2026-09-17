@@ -196,7 +196,7 @@ export default function DataQualityPage() {
 
                 <div className="pt-2 flex flex-wrap gap-4 text-xs font-mono text-[var(--muted)] border-t border-[var(--border-subtle)]">
                   <span>Method: {manifest.aggregation_method}</span>
-                  <span>Generated: {new Date(manifest.generated_at).toLocaleDateString()}</span>
+                  <span suppressHydrationWarning>Generated: {new Date(manifest.generated_at).toLocaleDateString()}</span>
                   <span>Schema: v{manifest.schema_version}</span>
                 </div>
               </div>
